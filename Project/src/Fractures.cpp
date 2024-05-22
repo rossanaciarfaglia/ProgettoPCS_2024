@@ -15,8 +15,8 @@ using namespace Eigen;
 namespace GeometryLibrary {
 
 // I dati del baricentro sono in un vettore lungo 3
-vector<double> Fractures::Baricentro(MatrixXd Poligono) {
-    vector<double> baricentro(3);
+Vector3d Fractures::Baricentro(MatrixXd Poligono) {
+    Vector3d baricentro;
     for(unsigned int riga = 0; riga < 3; riga++) {
         double sum = 0;
         for(unsigned int colonna = 0; colonna < Poligono.cols(); colonna++) {
@@ -27,14 +27,15 @@ vector<double> Fractures::Baricentro(MatrixXd Poligono) {
     return baricentro;
 }
 
+
 // Raggio delle sfere !!AL QUADRATO!!
-double Fractures::Raggio(vector<double> centro, MatrixXd Poligono) {
+double Fractures::Raggio(Vector3d baricentro, MatrixXd Poligono) {
     double R = 0;
     double dist;
     for (unsigned int numV=0; numV<Poligono.cols(); numV++){
         dist = 0;
         for (unsigned int i=0; i<3; i++){
-            dist += (centro[i]-Poligono(i,numV))*(centro[i]-Poligono(i,numV));
+            dist += (baricentro[i]-Poligono(i,numV))*(baricentro[i]-Poligono(i,numV));
         }
         if (dist > R){
             R = dist;
@@ -43,122 +44,93 @@ double Fractures::Raggio(vector<double> centro, MatrixXd Poligono) {
     return R;
 }
 
-double DistanzaEuclidea(vector<double> centro1, vector<double> centro2) {
-    double distanza = 0;
-    for (unsigned i = 0; i < 3; i++) {
-        distanza += pow(centro1[i] - centro2[i], 2);        // NB è il quadrato della dist
+
+Vector4d Fractures::TrovaPiano(MatrixXd poligono){
+    Vector3d u;
+    Vector3d v;
+    for (unsigned int ax=0; ax<3; ax++){           // (Sono x,y e z)
+        u[ax] = poligono(ax,2) - poligono(ax,0);   // u = P2-P0
+        v[ax] = poligono(ax,1) - poligono(ax,0);   // v = P1-P0
     }
-    return distanza;
+    double u_norm = u.norm();
+    cout << "norma di u: " << u_norm << endl;
+    double v_norm = v.norm();
+
+    Vector4d n_d;   // è il vettore normale n + la costante d
+    n_d[0] = (u[1]*v[2]-v[1]*u[2])/(u_norm*v_norm);
+    n_d[1] = (v[0]*u[2]-u[0]*v[2])/(u_norm*v_norm);
+    n_d[2] = (u[0]*v[1]-v[0]*u[1])/(u_norm*v_norm);
+
+    n_d[3] = n_d[0]*poligono(0,0) + n_d[1]*poligono(1,0) + n_d[2]*poligono(2,0);
+
+    return n_d;
 }
 
-Vector4d Fractures::TrovaPiano(MatrixXd Poligono) {
-    vector<double> P1 = {};
-    vector<double> P2 = {};
-    for (unsigned int colonna = 0; colonna < 3; colonna++) {
-        P1.push_back(Poligono(0, colonna) - Poligono(1, colonna));
-        P2.push_back(Poligono(0, colonna) - Poligono(2, colonna));
-    }
-    double a = P1[1] * P2[2] - P1[2] * P2[1];
-    double b = -(P1[0] * P2[2] - P1[2] * P2[0]);
-    double c = P1[0] * P2[1] - P1[1] * P2[0];
-    double d = a * Poligono(Poligono.rows() - 1, 0) + b * Poligono(Poligono.rows() - 1, 1) + c * Poligono(Poligono.rows() - 1, 2);
-    return {a, b, c, d};
-}
 
-// vector<vector<unsigned int>> SpheresIntersection() {
-//     vector<vector<unsigned int>> SphereIntersection = {};
-//     ofstream outputFile("No_Intersection.txt");
-
-//     for(unsigned int key = 0; key < numFractures; key++) {
-//         vector<double> baricentro1 = Baricentro(FracturesMap[key]);
-//         double R1 = Distanza(baricentro1, FracturesMap[key]);
-//         for(unsigned int chiavi = key + 1; chiavi < numFractures; chiavi++) {
-//             vector<double> baricentro2 = Baricentro(FracturesMap[chiavi]);
-//             double R2 = Distanza(baricentro2, FracturesMap[chiavi]);
-//             if(R1 + R2 <= DistanzaEuclidea(baricentro1, baricentro2)) {
-//                 outputFile << "NON CI SONO INTERSEZIONI TRA LE SFERE DELLE SEGUENTI FRATTURE" << endl;
-//                 outputFile << key << " e " << chiavi << endl;
-//             } else {
-//                 SphereIntersection.push_back({key, chiavi});
-//             }
-//         }
-//     }
-//     return SphereIntersection;
-// }
 bool IntersezioneSfere(Fractures &polygons, unsigned int id1, unsigned int id2){
-    double tol = 10 * numeric_limits<double>::epsilon();
+    double tol_quad = 100 * numeric_limits<double>::epsilon() * numeric_limits<double>::epsilon();
 
     MatrixXd Poly1 = polygons.FracturesMap[id1];
-    vector<double> Baricentro1 = polygons.Baricentro(Poly1);
-    double R1 = polygons.Raggio(Baricentro1, Poly1);
+    Vector3d baricentro1 = polygons.Baricentro(Poly1);
+    double R1 = polygons.Raggio(baricentro1, Poly1);
     MatrixXd Poly2 = polygons.FracturesMap[id2];
-    vector<double> Baricentro2 = polygons.Baricentro(Poly2);
-    double R2 = polygons.Raggio(Baricentro2, Poly2);
-    cout << "b1: " << Baricentro1[0] << " " << Baricentro1[1] << " "<< Baricentro1[2] << " "<< endl;
-    cout << "b2: " << Baricentro2[0] << " " << Baricentro2[1] << " "<< Baricentro2[2] << " "<< endl;
-    cout << "r1: " << sqrt(R1) << endl;
-    cout << "r2: " << sqrt(R2) << endl;
-    cout << "distanza: " << sqrt(DistanzaEuclidea(Baricentro1, Baricentro2)) << endl;
-    cout << sqrt(DistanzaEuclidea(Baricentro1, Baricentro2)) - (sqrt(R1)+sqrt(R2)) << endl;
-    cout << "tol: " << tol << endl;
-    if (sqrt(DistanzaEuclidea(Baricentro1, Baricentro2)) - (sqrt(R1)+sqrt(R2)) < tol){
+    Vector3d baricentro2 = polygons.Baricentro(Poly2);
+    double R2 = polygons.Raggio(baricentro2, Poly2);
+    if (DistanzaEuclidea(baricentro1, baricentro2) - (R1+R2+2*sqrt(R1*R2)) < tol_quad){
         return true;
     }
     return false;
 }
 
 
-// Vector3d ProiezioneVertice(Vector3d &Retta, unsigned int &id){
-//     vector<vector<double>> Proiez_vectors = {};
-//     Vector3d Proiezione;
-//     for (unsigned int vert_i=0; vert_i< Fractures::FracturesMap[id].rows(); vert_i++){
-//         double dist = abs(Retta[0]*FracturesMap[id][vert_i][0] + Retta[1]*FracturesMap[id][vert_i][1] + Retta[2]*FracturesMap[id][vert_i][2])/
-//                       sqrt(Retta[0]*Retta[0] + Retta[1]*Retta[1] + Retta[2]*Retta[2]);
-//         Proiezione[0] = FracturesMap[id][vert_i][0] - dist*(1/Retta[0])/sqrt(1/(Retta[0]*Retta[0]) + 1/(Retta[1]*Retta[1]) + 1/(Retta[2]*Retta[2]));
-//         Proiezione[1] = FracturesMap[id][vert_i][1] - dist*(1/Retta[1]);
-//         Proiezione[2] = FracturesMap[id][vert_i][2] - dist*(1/Retta[2]);
+double DistanzaEuclidea(Vector3d centro1, Vector3d centro2) {
+    double distanza = 0;
+    for (unsigned i = 0; i < 3; i++) {
+        distanza += pow(centro1[i] - centro2[i], 2);
+    }
+    return distanza;
+}
 
-//         Proiez_vectors.push_back(Proiezione);
-//     }
-// }
+pair<map<unsigned int, vector<unsigned int>>, map<unsigned int, vector<unsigned int>>> Fractures::Passante_NonPassante(ofstream& outputFile) {
+    double tol = 10 * numeric_limits<double>::epsilon();
+    unsigned int id_Traccia = 0;   //mi serve per il numero dell'id Traccia
+    vector<vector<unsigned int>> Lista_Intersezioni_Sfere = SpheresIntersection(); // contiene id delle fratture le cui sfere si intersecano
+    map<unsigned int, vector<unsigned int>> Passanti = {};
+    map<unsigned int, vector<unsigned int>> NonPassanti = {};
 
-// pair<map<unsigned int, vector<unsigned int>>, map<unsigned int, vector<unsigned int>>> Fractures::Passante_NonPassante(ofstream& outputFile) {
-//     cout << "ciao" << endl;
-//     double tol = 10 * numeric_limits<double>::epsilon();
-//     vector<vector<unsigned int>> Lista_Intersezioni_Sfere = SpheresIntersection();
-//     map<unsigned int, vector<unsigned int>> Passanti;
-//     map<unsigned int, vector<unsigned int>> NonPassanti;
+    for(unsigned int i = 0; i < Lista_Intersezioni_Sfere.size(); i++) {
+        unsigned int id1 = Lista_Intersezioni_Sfere[i][0];
+        unsigned int id2 = Lista_Intersezioni_Sfere[i][1];
+        Vector4d Piano1 = TrovaPiano(FracturesMap[id1]);
+        Vector4d Piano2 = TrovaPiano(FracturesMap[id2]);
 
-//     for(unsigned int i = 0; i < Lista_Intersezioni_Sfere.size(); i++) {
-//         unsigned int id1 = Lista_Intersezioni_Sfere[i][0];
-//         unsigned int id2 = Lista_Intersezioni_Sfere[i][1];
-//         Vector4d Piano1 = TrovaPiano(FracturesMap[id1]);
-//         Vector4d Piano2 = TrovaPiano(FracturesMap[id2]);
+        if (fabs(Piano1[0] - Piano2[0]) < tol && fabs(Piano1[1] - Piano2[1]) < tol && fabs(Piano1[2] - Piano2[2]) < tol) {
+            if(fabs(Piano1[3] - Piano2[3]) < tol) {
+                // coincidenti
+                cout << "Piani coincidenti tra le fratture " << id1 << " e " << id2 << endl;
+                outputFile << "I PIANI SONO COINCIDENTI QUINDI NON POSSONO ESSERCI INTERSEZIONI CHE GENERANO TRACCE" << endl;
+                outputFile << id1 << " e " << id2 << endl;
+            } else {
+                // paralleli
+                outputFile << "I PIANI SONO PARALLELI QUINDI NON POSSONO ESSERCI INTERSEZIONI" << endl;
+                outputFile << id1 << " e " << id2 << endl;
+            }
+        } else {
+            // incidenti
+            cout << "Piani incidenti tra le fratture " << id1 << " e " << id2 << endl;
+            vector<Vector3d> intersezioni1;
+            vector<Vector3d> intersezioni2;
+            pair<Vector3d, Vector3d> traccia;
+            map<unsigned int, pair<Vector3d, Vector3d>> mappa_traccia;
+            Find_Trace(Piano1, Piano2, id1, id2, FracturesMap[id1], FracturesMap[id2], id_Traccia, mappa_traccia);
+            id_Traccia+=1;
+        }
+    }
+    return {Passanti, NonPassanti};
+}
 
-//         if (fabs(Piano1[0] - Piano2[0]) < tol && fabs(Piano1[1] - Piano2[1]) < tol && fabs(Piano1[2] - Piano2[2]) < tol) {
-//             if(fabs(Piano1[3] - Piano2[3]) < tol) {
-//                 // coincidenti
-//                 cout << "Piani coincidenti tra le fratture " << id1 << " e " << id2 << endl;
-//             }
-//             else {
-//                 // paralleli
-//                 outputFile << "I PIANI SONO PARALLELI QUINDI NON POSSONO ESSERCI INTERSEZIONI" << endl;
-//                 outputFile << id1 << " e " << id2 << endl;
-//             }
-//         }
-//         else {
-//             // incidenti
-//             cout << "Piani incidenti tra le fratture " << id1 << " e " << id2 << endl;
-//             Vector3d Retta;
-//             Retta [0] = (Piano1[1]-Piano2[2])*(Piano2[1]-Piano1[2]);
-//             Retta [1] = (Piano1[0]-Piano2[2])*(Piano2[0]-Piano1[2]);
-//             Retta [2] = (Piano1[0]-Piano2[1])*(Piano2[0]-Piano1[1]);
 
 
-//         }
-//     }
-//     return {Passanti, NonPassanti};
-// }
 
 void ImportFracturesList(const string& filepath, Fractures& fractures) {
     ifstream file(filepath);
@@ -186,7 +158,7 @@ void ImportFracturesList(const string& filepath, Fractures& fractures) {
                 getline(file, line);
                 istringstream convertCoordinates(line);
                 for (unsigned int colonna = 0; colonna < numeroVertici; colonna++) {
-                    convertCoordinates >> fractures.VerticesCoordinates(riga, colonna);
+                    convertCoordinates >> fractures.VerticesCoordinates(riga, colonna); // per ogni colonna un vertice diverso : riga 1 = x1,x2,x3,x4
                     if (colonna != numeroVertici - 1)
                         convertCoordinates >> delimiter; // l'ultima colonna non ha il delimitatore
                 }
@@ -197,5 +169,4 @@ void ImportFracturesList(const string& filepath, Fractures& fractures) {
 
     file.close();
 }
-
 }
