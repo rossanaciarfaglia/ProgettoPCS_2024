@@ -15,7 +15,7 @@ using namespace Eigen;
 namespace GeometryLibrary {
 
 // I dati del baricentro sono in un vettore lungo 3
-Vector3d Fractures::Baricentro(MatrixXd Poligono) {
+Vector3d Fractures::Baricentro(MatrixXd &Poligono) {
     Vector3d baricentro;
     for(unsigned int riga = 0; riga < 3; riga++) {
         double sum = 0;
@@ -29,7 +29,7 @@ Vector3d Fractures::Baricentro(MatrixXd Poligono) {
 
 
 // Raggio delle sfere !!AL QUADRATO!!
-double Fractures::Raggio(Vector3d baricentro, MatrixXd Poligono) {
+double Fractures::Raggio(Vector3d &baricentro, MatrixXd &Poligono) {
     double R = 0;
     double dist;
     for (unsigned int numV=0; numV<Poligono.cols(); numV++){
@@ -45,7 +45,7 @@ double Fractures::Raggio(Vector3d baricentro, MatrixXd Poligono) {
 }
 
 
-Vector4d Fractures::TrovaPiano(MatrixXd poligono){
+Vector4d Fractures::TrovaPiano(MatrixXd &poligono){
     Vector3d u;
     Vector3d v;
     for (unsigned int ax=0; ax<3; ax++){           // (Sono x,y e z)
@@ -67,15 +67,13 @@ Vector4d Fractures::TrovaPiano(MatrixXd poligono){
 }
 
 
-bool IntersezioneSfere(Fractures &polygons, unsigned int id1, unsigned int id2){
+bool IntersezioneSfere(Fractures &polygons, MatrixXd &poly_1, MatrixXd &poly_2){
     double tol_quad = 100 * numeric_limits<double>::epsilon() * numeric_limits<double>::epsilon();
 
-    MatrixXd Poly1 = polygons.FracturesMap[id1];
-    Vector3d baricentro1 = polygons.Baricentro(Poly1);
-    double R1 = polygons.Raggio(baricentro1, Poly1);
-    MatrixXd Poly2 = polygons.FracturesMap[id2];
-    Vector3d baricentro2 = polygons.Baricentro(Poly2);
-    double R2 = polygons.Raggio(baricentro2, Poly2);
+    Vector3d baricentro1 = polygons.Baricentro(poly_1);
+    double R1 = polygons.Raggio(baricentro1, poly_1);
+    Vector3d baricentro2 = polygons.Baricentro(poly_2);
+    double R2 = polygons.Raggio(baricentro2, poly_2);
     if (DistanzaEuclidea(baricentro1, baricentro2) - (R1+R2+2*sqrt(R1*R2)) < tol_quad){
         return true;
     }
@@ -83,53 +81,13 @@ bool IntersezioneSfere(Fractures &polygons, unsigned int id1, unsigned int id2){
 }
 
 
-double DistanzaEuclidea(Vector3d centro1, Vector3d centro2) {
+double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
     double distanza = 0;
     for (unsigned i = 0; i < 3; i++) {
         distanza += pow(centro1[i] - centro2[i], 2);
     }
     return distanza;
 }
-
-pair<map<unsigned int, vector<unsigned int>>, map<unsigned int, vector<unsigned int>>> Fractures::Passante_NonPassante(ofstream& outputFile) {
-    double tol = 10 * numeric_limits<double>::epsilon();
-    unsigned int id_Traccia = 0;   //mi serve per il numero dell'id Traccia
-    vector<vector<unsigned int>> Lista_Intersezioni_Sfere = SpheresIntersection(); // contiene id delle fratture le cui sfere si intersecano
-    map<unsigned int, vector<unsigned int>> Passanti = {};
-    map<unsigned int, vector<unsigned int>> NonPassanti = {};
-
-    for(unsigned int i = 0; i < Lista_Intersezioni_Sfere.size(); i++) {
-        unsigned int id1 = Lista_Intersezioni_Sfere[i][0];
-        unsigned int id2 = Lista_Intersezioni_Sfere[i][1];
-        Vector4d Piano1 = TrovaPiano(FracturesMap[id1]);
-        Vector4d Piano2 = TrovaPiano(FracturesMap[id2]);
-
-        if (fabs(Piano1[0] - Piano2[0]) < tol && fabs(Piano1[1] - Piano2[1]) < tol && fabs(Piano1[2] - Piano2[2]) < tol) {
-            if(fabs(Piano1[3] - Piano2[3]) < tol) {
-                // coincidenti
-                cout << "Piani coincidenti tra le fratture " << id1 << " e " << id2 << endl;
-                outputFile << "I PIANI SONO COINCIDENTI QUINDI NON POSSONO ESSERCI INTERSEZIONI CHE GENERANO TRACCE" << endl;
-                outputFile << id1 << " e " << id2 << endl;
-            } else {
-                // paralleli
-                outputFile << "I PIANI SONO PARALLELI QUINDI NON POSSONO ESSERCI INTERSEZIONI" << endl;
-                outputFile << id1 << " e " << id2 << endl;
-            }
-        } else {
-            // incidenti
-            cout << "Piani incidenti tra le fratture " << id1 << " e " << id2 << endl;
-            vector<Vector3d> intersezioni1;
-            vector<Vector3d> intersezioni2;
-            pair<Vector3d, Vector3d> traccia;
-            map<unsigned int, pair<Vector3d, Vector3d>> mappa_traccia;
-            Find_Trace(Piano1, Piano2, id1, id2, FracturesMap[id1], FracturesMap[id2], id_Traccia, mappa_traccia);
-            id_Traccia+=1;
-        }
-    }
-    return {Passanti, NonPassanti};
-}
-
-
 
 
 void ImportFracturesList(const string& filepath, Fractures& fractures) {
@@ -152,21 +110,113 @@ void ImportFracturesList(const string& filepath, Fractures& fractures) {
             getline(file, line);
             istringstream convertLine(line);
             convertLine >> IdFracture >> delimiter >> numeroVertici;
-            fractures.VerticesCoordinates = MatrixXd::Zero(3, numeroVertici);
+            MatrixXd VerticesCoordinates = MatrixXd::Zero(3, numeroVertici);
             getline(file, line); // salta la linea "Vertices"
             for (unsigned int riga = 0; riga < 3; riga++) {
                 getline(file, line);
                 istringstream convertCoordinates(line);
                 for (unsigned int colonna = 0; colonna < numeroVertici; colonna++) {
-                    convertCoordinates >> fractures.VerticesCoordinates(riga, colonna); // per ogni colonna un vertice diverso : riga 1 = x1,x2,x3,x4
+                    convertCoordinates >> VerticesCoordinates(riga, colonna); // per ogni colonna un vertice diverso : riga 1 = x1,x2,x3,x4
                     if (colonna != numeroVertici - 1)
                         convertCoordinates >> delimiter; // l'ultima colonna non ha il delimitatore
                 }
             }
-            fractures.FracturesMap[IdFracture] = fractures.VerticesCoordinates; // aggiorna la mappa delle fratture
+            fractures.FracturesMap[IdFracture] = VerticesCoordinates; // aggiorna la mappa delle fratture
         }
     }
 
     file.close();
+}
+
+
+vector<Vector3d> Intersection_Point(Matrix<double, 2, 3> &retta, MatrixXd &vertici){
+    Vector3d punto_intersezione ;
+    vector<Vector3d> intersezioni;
+    int num_c = vertici.cols();
+    for(unsigned int c = 0; c < num_c; c ++){
+        double t_line ;
+        double t_segment ;
+        t_line =((vertici(0,(c+1)%(num_c-1)) - vertici(0,c)) * (retta(1,0) - vertici(1,c)) -
+                  (vertici(1,(c+1)%(num_c-1)) - vertici(1,c)) * (retta(0,0) - vertici(0,c))) /
+                 ((vertici(1,(c+1)%(num_c-1)) - vertici(1,c)) * retta(0,1) -
+                  (vertici(0,(c+1)%(num_c-1)) - vertici(1,c)) * retta(1,1));
+        t_segment = (retta(0,0) + retta(1,0) * t_line - vertici(0,c))/(vertici(0,(c+1)%(num_c-1)) - vertici(0,c));
+
+        cout<<"t_line: "<<t_line;
+        cout<<"t_segment: "<<t_segment;
+        //La prima parte della condizione if verifica se il parametro t_line è compreso tra 0 e 1, assicurandosi che il punto di intersezione sia all'interno della porzione della retta considerata. La seconda parte della condizione if verifica se il parametro t_segment è compreso tra 0 e 1, assicurandosi che il punto di intersezione si trovi all'interno del segmento del poligono considerato. Solo se entrambe queste condizioni sono soddisfatte, il punto di intersezione è considerato valido.
+        //verifica se il punto di intersezione si trova nel segmento
+        if (t_line >= 0 && t_line <= 1 && t_segment >= 0 && t_segment <= 1) {
+            // Calcola le coordinate del punto di intersezione
+            punto_intersezione[0] = retta(0,0) + retta(1,0) * t_line;
+            punto_intersezione[1] = retta(0,1) + retta(1,1) * t_line;
+            punto_intersezione[2] = retta(0,2) + retta(1,2) * t_line;
+            intersezioni.push_back(punto_intersezione);
+        }
+        //altrimenti non ci sono intersezioni lato, retta di intersezione piani
+        //non ci serve memorizzarli
+    }
+    return intersezioni;
+}
+
+
+MatrixXd IntersezionePiani(Fractures &polygons, vector<Vector3d> intersezioni1, vector<Vector3d> intersezioni2,
+                           MatrixXd &poly_1, MatrixXd &poly_2) {
+    double tol = 10 * numeric_limits<double>::epsilon();
+
+    Vector4d n1 = polygons.TrovaPiano(poly_1);
+    Vector4d n2 = polygons.TrovaPiano(poly_2);
+
+    Vector3d t;
+    t[0] = n1[1]*n2[2]-n1[2]*n2[1];
+    t[1] = n1[2]*n2[0]-n1[0]*n2[2];
+    t[2] = n1[0]*n2[1]-n1[1]*n2[0];
+
+    if(t[0]-0 < tol && t[1]-0 < tol && t[2]-0 < tol) {
+        // Sono paralleli o complanari
+        return;
+    }
+
+    Matrix3d A;
+    A.row(0) = n1.transpose();
+    A.row(1) = n2.transpose();
+    A.row(2) = t.transpose();
+
+    Vector3d P;
+
+    Vector3d b;
+    b << n1[3], n2[3], 0; //vettore delle d
+        // Risoluzione del sistema con il metodo QR
+    P = A.colPivHouseholderQr().solve(b);
+
+    MatrixXd retta_intersezione;
+    retta_intersezione.resize(2,3);
+    for(unsigned int colonna = 0; colonna < 3 ; colonna ++ ){
+        retta_intersezione(0,colonna) = P[colonna];  //la x0 y0 z0
+        retta_intersezione(1,colonna) = t[colonna];  //la a, b, c --> direzioni lungo i piani
+        //tali che la retta r(t) = (x0, y0, z0) + t (a,b,c)
+    }
+
+    intersezioni1 = Intersection_Point(retta_intersezione, poly_1);
+    intersezioni2 = Intersection_Point(retta_intersezione, poly_2);
+
+    if (intersezioni1.size() < 2 || intersezioni2.size() < 2) {
+        return;
+    }
+
+    return retta_intersezione;
+}
+
+
+//typedef Matrix<double, 3, 1> Vector3d;
+void Find_Trace(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2) {
+
+    if (!isLessOrEqual(intersezioni1[0], intersezioni1[1], t)) swap(intersezioni1[1], intersezioni1[0]);
+    if (!isLessOrEqual(intersezioni2[0], intersezioni2[1], t)) swap(intersezioni2[1], intersezioni2[0]);
+
+
+    pair<Vector3d, Vector3d>  traccia = Traccia(intersezioni1, intersezioni2, t);
+
+    mappa_traccia[id_Traccia] = traccia;
 }
 }

@@ -16,13 +16,14 @@ int main()
 
     for (unsigned int idF=0; idF<fractures.numFractures-1; idF++){
         unsigned int idF2 = (idF+1)%fractures.numFractures;
-        if(IntersezioneSfere(fractures,idF,idF2)){
-            cout << "Le sfere delle fratture " << idF << " e " << idF2 << " si intersecano" << endl;
-            // TrovaPiano per entrambe le fratture:
-            Vector4d n1 = fractures.TrovaPiano(fractures.FracturesMap[idF]);
-            Vector4d n2 = fractures.TrovaPiano(fractures.FracturesMap[idF2]);
+        MatrixXd fract_1 = fractures.FracturesMap[idF];
+        MatrixXd fract_2 = fractures.FracturesMap[idF2];
 
+        if(IntersezioneSfere(fractures,fract_1, fract_2)){
+            cout << "Le sfere delle fratture " << idF << " e " << idF2 << " si intersecano" << endl;
             // Studio del rapporto tra i due piani
+            vector<Vector3d> intersezioni1;
+            vector<Vector3d> intersezioni2;
         }
     }
 
@@ -34,7 +35,7 @@ int main()
     }
 
     // Call the Passante_NonPassante function
-    auto result = fractures.Passante_NonPassante(outputFile);
+    //auto result = fractures.Passante_NonPassante(outputFile);
 
     // Close the output file stream
     outputFile.close();
