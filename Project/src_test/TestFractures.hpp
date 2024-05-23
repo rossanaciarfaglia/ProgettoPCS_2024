@@ -114,10 +114,8 @@ TEST(IntersectionsTests, TestIntersezioneSfere){
                                               1,1,2,2).finished();
     unsigned int id1 = 0;
     unsigned int id2 = 1;
-    poligoniTest.FracturesMap[id1] = Triangolo;
-    poligoniTest.FracturesMap[id2] = Quadrilatero;
 
-    bool result = IntersezioneSfere(poligoniTest,id1,id2);
+    bool result = IntersezioneSfere(poligoniTest,Triangolo,Quadrilatero);
 
     EXPECT_TRUE(result);
 }

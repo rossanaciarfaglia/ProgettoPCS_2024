@@ -132,6 +132,7 @@ void ImportFracturesList(const string& filepath, Fractures& fractures) {
 vector<Vector3d> Intersection_Point(Matrix<double, 2, 3> &retta, MatrixXd &vertici){
     Vector3d punto_intersezione ;
     vector<Vector3d> intersezioni;
+    intersezioni.reserve(2);
     int num_c = vertici.cols();
     for(unsigned int c = 0; c < num_c; c ++){
         double t_line ;
@@ -160,8 +161,9 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3> &retta, MatrixXd &verti
 }
 
 
-MatrixXd IntersezionePiani(Fractures &polygons, vector<Vector3d> intersezioni1, vector<Vector3d> intersezioni2,
+Matrix<double,2,3> IntersezionePiani(Fractures &polygons, vector<Vector3d> intersezioni1, vector<Vector3d> intersezioni2,
                            MatrixXd &poly_1, MatrixXd &poly_2) {
+
     double tol = 10 * numeric_limits<double>::epsilon();
 
     Vector4d n1 = polygons.TrovaPiano(poly_1);
@@ -172,51 +174,51 @@ MatrixXd IntersezionePiani(Fractures &polygons, vector<Vector3d> intersezioni1, 
     t[1] = n1[2]*n2[0]-n1[0]*n2[2];
     t[2] = n1[0]*n2[1]-n1[1]*n2[0];
 
-    if(t[0]-0 < tol && t[1]-0 < tol && t[2]-0 < tol) {
-        // Sono paralleli o complanari
-        return;
+    if(t[0]-0 >= tol && t[1]-0 >= tol && t[2]-0 >= tol) {
+        // Non sono paralleli o complanari
+
+        Vector3d n1_reduced;
+        n1_reduced << n1[0], n1[1], n1[2];
+        Vector3d n2_reduced;
+        n2_reduced << n2[0], n2[1], n2[2];
+        Matrix3d A;
+        A.row(0) = n1_reduced.transpose();
+        A.row(1) = n2_reduced.transpose();
+        A.row(2) = t.transpose();
+
+        Vector3d P;
+
+        Vector3d b;
+        b << n1[3], n2[3], 0; //vettore delle d
+            // Risoluzione del sistema con il metodo QR
+        P = A.colPivHouseholderQr().solve(b);
+
+        Matrix<double,2,3> retta_intersezione;
+        for(unsigned int colonna = 0; colonna < 3 ; colonna ++ ){
+            retta_intersezione(0,colonna) = P[colonna];  //la x0 y0 z0
+            retta_intersezione(1,colonna) = t[colonna];  //la a, b, c --> direzioni lungo i piani
+            //tali che la retta r(t) = (x0, y0, z0) + t (a,b,c)
+        }
+
+        intersezioni1 = Intersection_Point(retta_intersezione, poly_1);
+        intersezioni2 = Intersection_Point(retta_intersezione, poly_2);
+
+        if (intersezioni1.size() == 2 && intersezioni2.size() == 2) {
+            return retta_intersezione;
+        }
     }
-
-    Matrix3d A;
-    A.row(0) = n1.transpose();
-    A.row(1) = n2.transpose();
-    A.row(2) = t.transpose();
-
-    Vector3d P;
-
-    Vector3d b;
-    b << n1[3], n2[3], 0; //vettore delle d
-        // Risoluzione del sistema con il metodo QR
-    P = A.colPivHouseholderQr().solve(b);
-
-    MatrixXd retta_intersezione;
-    retta_intersezione.resize(2,3);
-    for(unsigned int colonna = 0; colonna < 3 ; colonna ++ ){
-        retta_intersezione(0,colonna) = P[colonna];  //la x0 y0 z0
-        retta_intersezione(1,colonna) = t[colonna];  //la a, b, c --> direzioni lungo i piani
-        //tali che la retta r(t) = (x0, y0, z0) + t (a,b,c)
-    }
-
-    intersezioni1 = Intersection_Point(retta_intersezione, poly_1);
-    intersezioni2 = Intersection_Point(retta_intersezione, poly_2);
-
-    if (intersezioni1.size() < 2 || intersezioni2.size() < 2) {
-        return;
-    }
-
-    return retta_intersezione;
 }
 
 
 //typedef Matrix<double, 3, 1> Vector3d;
-void Find_Trace(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2) {
+void Find_Trace(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2,MatrixXd retta) {
 
-    if (!isLessOrEqual(intersezioni1[0], intersezioni1[1], t)) swap(intersezioni1[1], intersezioni1[0]);
-    if (!isLessOrEqual(intersezioni2[0], intersezioni2[1], t)) swap(intersezioni2[1], intersezioni2[0]);
+    if (!isLessOrEqual(intersezioni1[0], intersezioni1[1], retta)) swap(intersezioni1[1], intersezioni1[0]);
+    if (!isLessOrEqual(intersezioni2[0], intersezioni2[1], retta)) swap(intersezioni2[1], intersezioni2[0]);
 
 
-    pair<Vector3d, Vector3d>  traccia = Traccia(intersezioni1, intersezioni2, t);
+    pair<Vector3d, Vector3d>  traccia = Traccia(intersezioni1, intersezioni2);
 
-    mappa_traccia[id_Traccia] = traccia;
+    //mappa_traccia[id_Traccia] = traccia;
 }
 }

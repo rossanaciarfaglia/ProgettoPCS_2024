@@ -42,13 +42,13 @@ struct Trace{
     unsigned int id_fract2;
 };
 
-vector<Vector3d> Intersection_Point(Matrix<double, 2, 3> &retta, MatrixXd &vertici);
+vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici);
 
-MatrixXd IntersezionePiani(Fractures &polygons, vector<Vector3d> intersezioni1, vector<Vector3d> intersezioni2,
-                           MatrixXd &poly_1, MatrixXd &poly_2);
+Matrix<double,2,3> IntersezionePiani(Fractures &polygons, vector<Vector3d> intersezioni1,
+                                     vector<Vector3d> intersezioni2, MatrixXd &poly_1, MatrixXd &poly_2);
 
-inline bool isLessOrEqual(Vector3d p1, Vector3d p2, Vector3d t) {
-    return (p1[0] - p2[0]) * t[0] + (p1[1] - p2[1]) * t[1] + (p1[2] - p2[2]) * t[2] <= 0;
+inline bool isLessOrEqual(Vector3d p1, Vector3d p2, MatrixXd t) {
+    return (p1[0] - p2[0]) * t(0,0) + (p1[1] - p2[1]) * t(0,1) + (p1[2] - p2[2]) * t(0,2) <= 0;
 }
 
 
