@@ -28,8 +28,6 @@ struct Fracture{
     Vector4d TrovaPiano(MatrixXd &poligono);
 };
 
-
-void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
     double distanza = 0;
     for (unsigned i = 0; i < 3; i++) {
@@ -37,9 +35,7 @@ inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
     }
     return distanza;
 }
-bool IntersezioneSfere(Fracture& polygons, MatrixXd &poly_1, MatrixXd &poly_2);
-
-void ImportFracturesList(const string& filepath, Fracture& fractures);
+bool IntersezioneSfere(Fracture& polygons, MatrixXd& poly_1, MatrixXd& poly_2);
 
 
 struct Trace{
@@ -49,18 +45,26 @@ struct Trace{
     unsigned int id_fract2;
 };
 
+
+Matrix<double,2,3> IntersezionePiani(Fracture &polygons, MatrixXd &poly_1, MatrixXd &poly_2);
+
+inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
+    Matrix2d A;
+    A.col(0) = (P1-P0).head<2>();
+    A.col(1) = -dir_retta.head<2>();
+
+    Vector2d b = (Q-P0).head<2>();
+    Vector2d solution = A.colPivHouseholderQr().solve(b);
+
+    return solution;
+}
 vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici);
 
-Matrix<double,2,3> IntersezionePiani(Fracture &polygons, vector<Vector3d> intersezioni1,
-                                     vector<Vector3d> intersezioni2, MatrixXd &poly_1, MatrixXd &poly_2);
-
-inline bool isLessOrEqual(Vector3d p1, Vector3d p2, MatrixXd t) {
-    return (p1[0] - p2[0]) * t(0,0) + (p1[1] - p2[1]) * t(0,1) + (p1[2] - p2[2]) * t(0,2) <= 0;
+inline bool isLessOrEqual(Vector3d p1, Vector3d p2, MatrixXd retta_int) {
+    return (p1[0] - p2[0]) * retta_int(0,0) + (p1[1] - p2[1]) * retta_int(0,1) + (p1[2] - p2[2]) * retta_int(0,2) <= 0;
 }
 
-
-inline pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1,
-                                        vector<Vector3d> &intersezioni2){
+inline pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2){
 
     //trova l'inizio e la fine dell'intersezione
     Vector3d intersection_start;
@@ -84,22 +88,10 @@ inline pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1,
     }
 }
 
+pair<Vector3d, Vector3d> Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2);
 
-inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
-    Matrix2d A;
-    A.col(0) = (P1-P0).head<2>();
-    A.col(1) = -dir_retta.head<2>();
-
-    Vector2d b = (Q-P0).head<2>();
-    Vector2d solution = A.colPivHouseholderQr().solve(b);
-
-    return solution;
-}
-
-
-void Find_Trace(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, MatrixXd &retta);
+void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
 }
-
 
 #endif

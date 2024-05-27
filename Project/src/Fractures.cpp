@@ -24,6 +24,7 @@ Vector3d Fracture::Baricentro(MatrixXd &Poligono) {
         }
         baricentro[riga] = sum / numVertici;
     }
+    cout << "baricentro ok" << endl;
     return baricentro;
 }
 
@@ -41,6 +42,7 @@ double Fracture::Raggio(Vector3d &baricentro, MatrixXd &Poligono) {
             R = dist;
         }
     }
+    cout << "raggio ok" << endl;
     return R;
 }
 
@@ -53,7 +55,6 @@ Vector4d Fracture::TrovaPiano(MatrixXd &poligono){
         v[coordinate] = poligono(coordinate,1) - poligono(coordinate,0);   // v = P1-P0
     }
     double u_norm = u.norm();
-    cout << "norma di u: " << u_norm << endl;
     double v_norm = v.norm();
 
     Vector4d piano;   // è il vettore normale n + la costante d
@@ -63,6 +64,7 @@ Vector4d Fracture::TrovaPiano(MatrixXd &poligono){
 
     piano[3] = piano[0]*poligono(0,0) + piano[1]*poligono(1,0) + piano[2]*poligono(2,0);
 
+    cout << "trova piano ok" << endl;
     return piano;
 }
 
@@ -74,12 +76,60 @@ bool IntersezioneSfere(Fracture& polygons, MatrixXd& poly_1, MatrixXd& poly_2){
     double R1 = polygons.Raggio(baricentro1, poly_1);
     Vector3d baricentro2 = polygons.Baricentro(poly_2);
     double R2 = polygons.Raggio(baricentro2, poly_2);
+    cout << "inters sfere ok" << endl;
     if (DistanzaEuclidea(baricentro1, baricentro2) - (R1+R2+2*sqrt(R1*R2)) < tol_quad){
         return true;
     }
     return false;
 }
 
+
+
+Matrix<double,2,3> IntersezionePiani(Fracture &polygon, MatrixXd &poly_1, MatrixXd &poly_2) {
+
+    double tol = 10 * numeric_limits<double>::epsilon();
+
+    Vector4d n1 = polygon.TrovaPiano(poly_1);
+    Vector4d n2 = polygon.TrovaPiano(poly_2);
+    Vector3d t;
+    t[0] = n1[1]*n2[2]-n1[2]*n2[1];
+    t[1] = n1[2]*n2[0]-n1[0]*n2[2];
+    t[2] = n1[0]*n2[1]-n1[1]*n2[0];
+
+    if(t.norm() != 0) {
+    // Non sono paralleli o complanari
+        cout << "entra nell'if" << endl;
+
+        // Vector3d n1_reduced;
+        // n1_reduced << n1[0], n1[1], n1[2];
+        // Vector3d n2_reduced;
+        // n2_reduced << n2[0], n2[1], n2[2];
+        Matrix3d A;
+        A.row(0) = n1.head<3>();
+        A.row(1) = n2.head<3>();
+        A.row(2) = t;
+        cout << "salva A" << endl;
+
+        Vector3d P;
+
+        Vector3d b;
+        b << n1[3], n2[3], 0;  //vettore delle d
+        // Risoluzione del sistema con il metodo QR
+        FullPivLU<Matrix3d> lu_decomp(A);
+        P = lu_decomp.solve(b);
+        cout << "risolve la decomposizione" << endl;
+
+        Matrix<double,2,3> retta_intersezione;
+
+        for(unsigned int colonna = 0; colonna < 3 ; colonna ++ ){
+            retta_intersezione(0,colonna) = P[colonna];  //la x0 y0 z0
+            retta_intersezione(1,colonna) = t[colonna];  //la a, b, c --> direzioni lungo i piani
+            //tali che la retta r(t) = (x0, y0, z0) + t (a,b,c)
+        }
+        cout << "inters piani ok" << endl;
+        return retta_intersezione;
+    }
+}
 
 
 vector<Vector3d> Intersection_Point(Matrix<double, 2, 3> &retta, MatrixXd &vertici){    //metrere qui la condizione di =2
@@ -103,70 +153,28 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3> &retta, MatrixXd &verti
     if (intersezioni.size() == 2){
         return intersezioni;
     }
-
-}
-
-
-Matrix<double,2,3> IntersezionePiani(Fracture &polygons, vector<Vector3d> intersezioni1, vector<Vector3d> intersezioni2,
-                           MatrixXd &poly_1, MatrixXd &poly_2) {
-
-    double tol = 10 * numeric_limits<double>::epsilon();
-
-    Vector4d n1 = polygons.TrovaPiano(poly_1);
-    Vector4d n2 = polygons.TrovaPiano(poly_2);
-
-    Vector3d t;
-    t[0] = n1[1]*n2[2]-n1[2]*n2[1];
-    t[1] = n1[2]*n2[0]-n1[0]*n2[2];
-    t[2] = n1[0]*n2[1]-n1[1]*n2[0];
-
-    if(t[0]-0 >= tol && t[1]-0 >= tol && t[2]-0 >= tol) {
-    // Non sono paralleli o complanari
-
-        // Vector3d n1_reduced;
-        // n1_reduced << n1[0], n1[1], n1[2];
-        // Vector3d n2_reduced;
-        // n2_reduced << n2[0], n2[1], n2[2];
-        Matrix3d A;
-        A.row(0) = n1.head<3>();
-        A.row(1) = n2.head<3>();
-        A.row(2) = t;
-
-        Vector3d P;
-
-        Vector3d b;
-        b << n1[3], n2[3], 0; //vettore delle d
-            // Risoluzione del sistema con il metodo QR
-        FullPivLU<Matrix3d> lu_decomp(A);
-        P = lu_decomp.solve(b);
-
-        Matrix<double,2,3> retta_intersezione;
-
-        for(unsigned int colonna = 0; colonna < 3 ; colonna ++ ){
-            retta_intersezione(0,colonna) = P[colonna];  //la x0 y0 z0
-            retta_intersezione(1,colonna) = t[colonna];  //la a, b, c --> direzioni lungo i piani
-            //tali che la retta r(t) = (x0, y0, z0) + t (a,b,c)
-        }
-
-        intersezioni1 = Intersection_Point(retta_intersezione, poly_1);
-        intersezioni2 = Intersection_Point(retta_intersezione, poly_2);
-
-        if (intersezioni1.size() == 2 && intersezioni2.size() == 2) {
-            return retta_intersezione;
-        }
-    }
+    cout << "intersection point ok" << endl;
 }
 
 
 //typedef Matrix<double, 3, 1> Vector3d;
-void Find_Trace(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2,MatrixXd &retta) {
-    if (!isLessOrEqual(intersezioni1[0], intersezioni1[1], retta)) swap(intersezioni1[1], intersezioni1[0]);
-    if (!isLessOrEqual(intersezioni2[0], intersezioni2[1], retta)) swap(intersezioni2[1], intersezioni2[0]);
+pair<Vector3d, Vector3d> Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2) {
+    Matrix<double,2,3> retta_intersezione = IntersezionePiani(polygon, vert_1, vert_2);
 
-    pair<Vector3d, Vector3d>  traccia = Traccia(intersezioni1, intersezioni2);
-    //Trace.Vertices = Traccia(intersezioni1, intersezioni2);
-    //mappa_traccia[id_Traccia] = traccia;
+    vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, vert_1);
+    vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, vert_2);
+
+    if (!isLessOrEqual(intersezioni1[0], intersezioni1[1], retta_intersezione)) swap(intersezioni1[1], intersezioni1[0]);
+    if (!isLessOrEqual(intersezioni2[0], intersezioni2[1], retta_intersezione)) swap(intersezioni2[1], intersezioni2[0]);
+
+    pair<Vector3d, Vector3d> traccia;
+    traccia = Traccia(intersezioni1, intersezioni2);
+    return traccia;
+    cout << "find trace ok" << endl;
 }
+
+
+
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures){//nome struttura
     ifstream file(filepath);
