@@ -25,8 +25,8 @@ int main()
             if(IntersezioneSfere(fracture, CollectionFractures[idF1].Vertici, CollectionFractures[idF2].Vertici)){
                 cout << "Le sfere delle fratture " << idF1 << " e " << idF2 << " si intersecano" << endl;
                 //Studio del rapporto tra i due piani
-                pair<Vector3d, Vector3d> traccia = Find_Trace(fracture, CollectionFractures[idF1].Vertici, CollectionFractures[idF2].Vertici);
-                cout << "traccia.first[0]" << endl;
+                Find_Trace(fracture, CollectionFractures[idF1].Vertici, CollectionFractures[idF2].Vertici);
+                cout << "ok" << endl;
             }
         }
     }

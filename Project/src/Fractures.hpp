@@ -48,16 +48,26 @@ struct Trace{
 
 Matrix<double,2,3> IntersezionePiani(Fracture &polygons, MatrixXd &poly_1, MatrixXd &poly_2);
 
-inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
-    Matrix2d A;
-    A.col(0) = (P1-P0).head<2>();
-    A.col(1) = -dir_retta.head<2>();
 
-    Vector2d b = (Q-P0).head<2>();
-    Vector2d solution = A.colPivHouseholderQr().solve(b);
+inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
+
+    Vector2d solution;
+    MatrixXd A(3,2);
+    A.col(0) = (P1 - P0); // Colonna per il parametro t
+    A.col(1) = (-dir_retta); // Colonna per il parametro s
+    Vector3d b = (Q - P0);
+    if (((P1-P0).cross(dir_retta)).norm() != 0){ //controllo parallelismo
+        solution = A.colPivHouseholderQr().solve(b);
+    }
+    // Risoluzione del sistema lineare
+    else {
+        solution(0) = -1;
+        solution(1) = -1; //assegnamo soluzioni che scarta
+    }
 
     return solution;
 }
+
 vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici);
 
 inline bool isLessOrEqual(Vector3d p1, Vector3d p2, MatrixXd retta_int) {
@@ -65,7 +75,6 @@ inline bool isLessOrEqual(Vector3d p1, Vector3d p2, MatrixXd retta_int) {
 }
 
 inline pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2){
-
     //trova l'inizio e la fine dell'intersezione
     Vector3d intersection_start;
     Vector3d intersection_end ;
@@ -88,7 +97,7 @@ inline pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<
     }
 }
 
-pair<Vector3d, Vector3d> Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2);
+void Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
