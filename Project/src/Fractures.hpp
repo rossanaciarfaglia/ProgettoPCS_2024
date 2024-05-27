@@ -10,41 +10,48 @@ using namespace Eigen;
 using namespace std;
 
 namespace GeometryLibrary {
-struct Fractures{
-    unsigned int numFractures;
-    map<unsigned int, MatrixXd> FracturesMap;
+struct Fracture{
+    unsigned int numVertici;
+    MatrixXd Vertici;
 
-    Fractures() = default; // costruttore di default
+    Fracture() = default; // costruttore di default
 
-    Fractures(unsigned int& numFractures,
-              map<unsigned int, MatrixXd>& FracturesMap
+    Fracture(unsigned int& numVertici,
+              MatrixXd& Vertici
               ):
-        numFractures(numFractures),
-        FracturesMap(FracturesMap)
-    {} // prende in input le coordinate dei vertici e la lista dei vertici e inizializza i membri corrispondenti VerticesCoordinates e ListVertices con i valori passati come argomenti
+        numVertici(numVertici),
+        Vertici(Vertici)
+        {} // prende in input le coordinate dei vertici e la lista dei vertici e inizializza i membri corrispondenti VerticesCoordinates e ListVertices con i valori passati come argomenti
 
-    Vector3d Baricentro(MatrixXd &Poligono);
+    Vector3d Baricentro(MatrixXd &Poligono); //metodo in quanto proprietà della frattura
     double Raggio(Vector3d &centro, MatrixXd &Poligono);
     Vector4d TrovaPiano(MatrixXd &poligono);
 };
 
-void ImportFracturesList(const string& filepath, Fractures& fractures);
-double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2);
-bool IntersezioneSfere(Fractures &polygons, MatrixXd &poly_1, MatrixXd &poly_2);
 
-void ImportFracturesList(const string& filepath, Fractures& fractures);
+void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
+inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
+    double distanza = 0;
+    for (unsigned i = 0; i < 3; i++) {
+        distanza += pow(centro1[i] - centro2[i], 2);
+    }
+    return distanza;
+}
+bool IntersezioneSfere(Fracture& polygons, MatrixXd &poly_1, MatrixXd &poly_2);
+
+void ImportFracturesList(const string& filepath, Fracture& fractures);
 
 
 struct Trace{
     unsigned int id;
-    Matrix2d Vertices;
+    pair<Vector3d, Vector3d> Vertices;
     unsigned int id_fract1;
     unsigned int id_fract2;
 };
 
 vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici);
 
-Matrix<double,2,3> IntersezionePiani(Fractures &polygons, vector<Vector3d> intersezioni1,
+Matrix<double,2,3> IntersezionePiani(Fracture &polygons, vector<Vector3d> intersezioni1,
                                      vector<Vector3d> intersezioni2, MatrixXd &poly_1, MatrixXd &poly_2);
 
 inline bool isLessOrEqual(Vector3d p1, Vector3d p2, MatrixXd t) {
@@ -78,7 +85,19 @@ inline pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1,
 }
 
 
-void Find_Trace(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2);
+inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
+    Matrix2d A;
+    A.col(0) = (P1-P0).head<2>();
+    A.col(1) = -dir_retta.head<2>();
+
+    Vector2d b = (Q-P0).head<2>();
+    Vector2d solution = A.colPivHouseholderQr().solve(b);
+
+    return solution;
+}
+
+
+void Find_Trace(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, MatrixXd &retta);
 
 }
 

@@ -11,19 +11,28 @@ using namespace GeometryLibrary;
 int main()
 {
     string filepath = "./DFN/FR3_data.txt";
-    Fractures fractures;
-    ImportFracturesList(filepath, fractures);
+    Fracture fracture;
+    unordered_map<unsigned int, Fracture> CollectionFractures; // Il costo computazionale è O(1), non O(logn)
+    ImportFracturesList(filepath, fracture, CollectionFractures);
 
-    for (unsigned int idF=0; idF<fractures.numFractures-1; idF++){
-        unsigned int idF2 = (idF+1)%fractures.numFractures;
-        MatrixXd fract_1 = fractures.FracturesMap[idF];
-        MatrixXd fract_2 = fractures.FracturesMap[idF2];
 
-        if(IntersezioneSfere(fractures,fract_1, fract_2)){
-            cout << "Le sfere delle fratture " << idF << " e " << idF2 << " si intersecano" << endl;
-            // Studio del rapporto tra i due piani
-            vector<Vector3d> intersezioni1;
-            vector<Vector3d> intersezioni2;
+//prendiamo ID vettore e ne prendiamo l'id
+    unsigned int n_key = CollectionFractures.size();
+    for (unsigned int idF1 = 0; idF1<n_key; idF1++){
+        for(unsigned int idF2 = (idF1+1); idF2<n_key;idF2++){
+            unsigned int idT = 0;
+
+            if(IntersezioneSfere(fracture, CollectionFractures[idF1].Vertici, CollectionFractures[idF2].Vertici)){
+                cout << "Le sfere delle fratture " << idF1 << " e " << idF2 << " si intersecano" << endl;
+                //Studio del rapporto tra i due piani
+                // vector<Vector3d> intersezioni1;
+                // vector<Vector3d> intersezioni2;
+                // Matrix<double,2,3> retta_inters = IntersezionePiani(fractures,intersezioni1,intersezioni2,fract_1,fract_2);
+                // // Trace.id = idT;
+                // // Trace.id_fract1 = idF;
+                // // Trace.id_fract2 = idF2;
+                // void Find_Trace(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2,Matrix<double,2,3> &retta_inters);
+            }
         }
     }
 

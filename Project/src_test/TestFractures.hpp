@@ -11,11 +11,10 @@ using namespace std;
 
 namespace GeometryLibrary {
 TEST(PolygonsTest, TestBaricentro_1){
-    Fractures poligoniTest;
     MatrixXd Triangolo = (MatrixXd(3,3) << 3,3,2,
                           2,1,1,
                           1,1,1).finished();
-
+    Fracture poligoniTest = {3,Triangolo};
     Vector3d result = poligoniTest.Baricentro(Triangolo);
     Vector3d expected_res = {2.66667,1.33333,1};
     for (unsigned int i=0; i<3; i++){
@@ -23,7 +22,7 @@ TEST(PolygonsTest, TestBaricentro_1){
     }
 }
 TEST(PolygonsTest, TestBaricentro_2){
-    Fractures poligoniTest;
+    Fracture poligoniTest;
     MatrixXd Quadrilatero = (MatrixXd(3,4) << 3,2,2,3,
                              2.6,2.6,2.6,2.6,
                              1,1,2,2).finished();
@@ -37,7 +36,7 @@ TEST(PolygonsTest, TestBaricentro_2){
 
 
 TEST(PolygonsTest, TestRaggio_1){
-    Fractures poligoniTest;
+    Fracture poligoniTest;
     MatrixXd Triangolo = (MatrixXd(3,3) << 3,3,2,
                           2,1,1,
                           1,1,1).finished();
@@ -50,7 +49,7 @@ TEST(PolygonsTest, TestRaggio_1){
 
 
 TEST(PolygonsTest, TestRaggio_2){
-    Fractures poligoniTest;
+    Fracture poligoniTest;
     MatrixXd Quadrilatero = (MatrixXd(3,4) << 3,2,2,3,
                              2.6,2.6,2.6,2.6,
                              1,1,2,2).finished();
@@ -63,7 +62,7 @@ TEST(PolygonsTest, TestRaggio_2){
 
 
 TEST(PolygonsTest, TestTrovaPiano_1){
-    Fractures poligoniTest;
+    Fracture poligoniTest;
     MatrixXd Triangolo = (MatrixXd(3,3) << 3,3,2,
                           2,1,1,
                           1,1,1).finished();
@@ -71,13 +70,15 @@ TEST(PolygonsTest, TestTrovaPiano_1){
     Vector4d expected_res = {0,0,1/1.41421,1/1.41421};
 
     for (unsigned int i=0; i<4; i++){
+        cout << result[i] << " ";
         EXPECT_NEAR(result[i], expected_res[i], 0.00001);
     }
+    cout << endl;
 }
 
 
 TEST(PolygonsTest, TestTrovaPiano_2){
-    Fractures poligoniTest;
+    Fracture poligoniTest;
     MatrixXd Quadrilatero = (MatrixXd(3,4) << 3,2,2,3,
                              2.6,2.6,2.6,2.6,
                              1,1,2,2).finished();
@@ -90,7 +91,7 @@ TEST(PolygonsTest, TestTrovaPiano_2){
 }
 
 TEST(PolygonsTest, TestTrovaPiano_3){
-    Fractures poligoniTest;
+    Fracture poligoniTest;
     MatrixXd Triangolo = (MatrixXd(3,3) << 0,0.5,1.5,
                                        1,3,2,
                                        0,2,0).finished();
@@ -104,7 +105,7 @@ TEST(PolygonsTest, TestTrovaPiano_3){
 
 
 TEST(IntersectionsTests, TestIntersezioneSfere){
-    Fractures poligoniTest;
+    Fracture poligoniTest;
 
     MatrixXd Triangolo = (MatrixXd(3,3) << 3,3,2,
                                           2,1,1,
