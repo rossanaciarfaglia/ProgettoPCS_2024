@@ -68,7 +68,7 @@ inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Ve
     return solution;
 }
 
-vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici);
+vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici, const unsigned int& numVert);
 
 inline bool isLessOrEqual(Vector3d p1, Vector3d p2, MatrixXd retta_int) {
     return (p1[0] - p2[0]) * retta_int(0,0) + (p1[1] - p2[1]) * retta_int(0,1) + (p1[2] - p2[2]) * retta_int(0,2) <= 0;
@@ -97,7 +97,7 @@ inline pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<
     }
 }
 
-void Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2);
+void Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2, const unsigned int& numVert_1, const unsigned int& numVert_2);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 

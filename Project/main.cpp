@@ -14,19 +14,22 @@ int main()
     Fracture fracture;
     unordered_map<unsigned int, Fracture> CollectionFractures; // Il costo computazionale è O(1), non O(logn)
     ImportFracturesList(filepath, fracture, CollectionFractures);
+    Trace trace;
 
 
-//prendiamo ID vettore e ne prendiamo l'id
+    unsigned int idT = 0;
     unsigned int n_key = CollectionFractures.size();
     for (unsigned int idF1 = 0; idF1<n_key; idF1++){
         for(unsigned int idF2 = (idF1+1); idF2<n_key;idF2++){
-            unsigned int idT = 0;
 
             if(IntersezioneSfere(fracture, CollectionFractures[idF1].Vertici, CollectionFractures[idF2].Vertici)){
                 cout << "Le sfere delle fratture " << idF1 << " e " << idF2 << " si intersecano" << endl;
                 //Studio del rapporto tra i due piani
-                Find_Trace(fracture, CollectionFractures[idF1].Vertici, CollectionFractures[idF2].Vertici);
-                cout << "ok" << endl;
+                Find_Trace(fracture, CollectionFractures[idF1].Vertici, CollectionFractures[idF2].Vertici, CollectionFractures[idF1].numVertici, CollectionFractures[idF2].numVertici);
+                trace.id = idT;
+                trace.id_fract1 = idF1;
+                trace.id_fract2 = idF2;
+                idT += 1;
             }
         }
     }

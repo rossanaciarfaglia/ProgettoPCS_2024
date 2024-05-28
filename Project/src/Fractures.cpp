@@ -15,12 +15,12 @@ using namespace Eigen;
 namespace GeometryLibrary {
 
 // I dati del baricentro sono in un vettore lungo 3
-Vector3d Fracture::Baricentro(MatrixXd &Poligono) {
+Vector3d Fracture::Baricentro(MatrixXd &poligono) {
     Vector3d baricentro;
     for(unsigned int riga = 0; riga < 3; riga++) {
         double sum = 0;
         for(unsigned int colonna = 0; colonna < numVertici; colonna++) {
-            sum += Poligono(riga, colonna);
+            sum += poligono(riga, colonna);
         }
         baricentro[riga] = sum / numVertici;
     }
@@ -29,13 +29,13 @@ Vector3d Fracture::Baricentro(MatrixXd &Poligono) {
 
 
 // Raggio delle sfere !!AL QUADRATO!!
-double Fracture::Raggio(Vector3d &baricentro, MatrixXd &Poligono) {
+double Fracture::Raggio(Vector3d &baricentro, MatrixXd &poligono) {
     double R = 0;
     double dist;
     for (unsigned int colonna=0; colonna<numVertici; colonna++){
         dist = 0;   //passando alla colonna successiva devo riazzerare la distanza
         for (unsigned int i=0; i<3; i++){
-            dist += (baricentro[i]-Poligono(i,colonna))*(baricentro[i]-Poligono(i,colonna));
+            dist += (baricentro[i]-poligono(i,colonna))*(baricentro[i]-poligono(i,colonna));
         }
         if (dist > R){    //salvo solo se la ristanza è maggiore della distanza
             R = dist;
@@ -119,14 +119,13 @@ Matrix<double,2,3> IntersezionePiani(Fracture &polygon, MatrixXd &poly_1, Matrix
 }
 
 
-vector<Vector3d> Intersection_Point(Matrix<double, 2, 3> &retta, MatrixXd &vertici){    //metrere qui la condizione di =2
+vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, MatrixXd& vertici, const unsigned int& numVert){    //metrere qui la condizione di =2
     Vector3d punto_intersezione ;
     vector<Vector3d> intersezioni;
     intersezioni.reserve(2);
-    int num_c = vertici.cols(); // usare numVert della structure
     Vector2d system_solution;
-    for(unsigned int c = 0; c < num_c; c++){
-        if(c == vertici.cols() - 1){ // l'ultimo vertice viene confronttato con il primo
+    for(unsigned int c = 0; c < numVert; c++){
+        if(c == numVert - 1){ // l'ultimo vertice viene confronttato con il primo
             system_solution = ParametriRette(vertici.col(c), vertici.col(0), retta.row(0), retta.row(1));
             // controllo che alpha sia coerente anche con la coordinata z : (1-alpha)z0+alpha*z1 = qz+tdz
         }
@@ -135,9 +134,9 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3> &retta, MatrixXd &verti
             system_solution = ParametriRette(vertici.col(c), vertici.col(c+1), retta.row(0), retta.row(1));
         }
 
-        if (system_solution[0] >= 0 && system_solution[0] <= 1) {
+        if (system_solution[0] >= 0 && system_solution[0] <= 1) {   // Questo è il segmento
             // Calcola le coordinate del punto di intersezione
-            punto_intersezione[0] = retta(0,0) + retta(1,0) * system_solution[1];
+            punto_intersezione[0] = retta(0,0) + retta(1,0) * system_solution[1];       // Questa è la retta
             punto_intersezione[1] = retta(0,1) + retta(1,1) * system_solution[1];
             punto_intersezione[2] = retta(0,2) + retta(1,2) * system_solution[1];
             intersezioni.push_back(punto_intersezione);
@@ -148,16 +147,15 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3> &retta, MatrixXd &verti
     }
 
     return intersezioni;
-
 }
 
 
 //typedef Matrix<double, 3, 1> Vector3d;
-void Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2) {
+void Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2, const unsigned int& numVert_1, const unsigned int& numVert_2) {
     Matrix<double,2,3> retta_intersezione = IntersezionePiani(polygon, vert_1, vert_2);
 
-    vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, vert_1);
-    vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, vert_2);
+    vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, vert_1, numVert_1);
+    vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, vert_2, numVert_2);
     if (intersezioni1.size() < 2 || intersezioni2.size() < 2) {
         return;
     }
@@ -165,8 +163,7 @@ void Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2) {
     if (!isLessOrEqual(intersezioni1[0], intersezioni1[1], retta_intersezione)) swap(intersezioni1[1], intersezioni1[0]);
     if (!isLessOrEqual(intersezioni2[0], intersezioni2[1], retta_intersezione)) swap(intersezioni2[1], intersezioni2[0]);
 
-    pair<Vector3d, Vector3d> traccia;
-    traccia = Traccia(intersezioni1, intersezioni2);
+    Trace.Vertices = Traccia(intersezioni1, intersezioni2);
 }
 
 
