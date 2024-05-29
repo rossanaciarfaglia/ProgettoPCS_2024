@@ -50,7 +50,6 @@ Matrix<double,2,3> IntersezionePiani(Fracture &polygons, MatrixXd &poly_1, Matri
 
 
 inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
-
     Vector2d solution;
     MatrixXd A(3,2);
     A.col(0) = (P1 - P0); // Colonna per il parametro t
@@ -70,34 +69,13 @@ inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Ve
 
 vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici, const unsigned int& numVert);
 
-inline bool isLessOrEqual(Vector3d p1, Vector3d p2, MatrixXd retta_int) {
-    return (p1[0] - p2[0]) * retta_int(0,0) + (p1[1] - p2[1]) * retta_int(0,1) + (p1[2] - p2[2]) * retta_int(0,2) <= 0;
+inline bool isLess(Vector3d p1, Vector3d p0, MatrixXd retta_inters) {
+    return (p1[0] - p0[0]) * retta_inters(1,0) + (p1[1] - p0[1]) * retta_inters(1,1) + (p1[2] - p0[2]) * retta_inters(1,2) < 0;
 }
 
-inline pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2){
-    //trova l'inizio e la fine dell'intersezione
-    Vector3d intersection_start;
-    Vector3d intersection_end ;
-    bool overlap = true;
+pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters);
 
-    for (int i = 0; i < 3; ++i) {
-        intersection_start[i] = max(intersezioni1[0][i], intersezioni2[0][i]);
-        intersection_end[i] = min(intersezioni1[1][i], intersezioni2[1][i]);
-
-        if (intersection_start[i] > intersection_end[i]) {
-            overlap = false;
-        }
-        if (!overlap) {
-            // Se non c'è sovrapposizione, possiamo restituire un valore indicativo
-            // di nessuna intersezione, come due punti uguali o una coppia di zero.
-            return {Vector3d::Zero(), Vector3d::Zero()};
-        }
-
-        return {intersection_start, intersection_end};
-    }
-}
-
-void Find_Trace(Fracture& polygon, MatrixXd& vert_1, MatrixXd& vert_2, const unsigned int& numVert_1, const unsigned int& numVert_2);
+void Find_Trace(Fracture& polygon, Trace& trace, MatrixXd& vert_1, MatrixXd& vert_2, const unsigned int& numVert_1, const unsigned int& numVert_2);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
