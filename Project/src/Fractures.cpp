@@ -199,7 +199,7 @@ void Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
     Matrix<double,2,3> retta_intersezione = IntersezionePiani(polygon, poligono1.Vertici, poligono2.Vertici);
 
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
-    vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
+    vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, poligono2.Vertici, poligono2.numVertici);
 
     cout << "inter1[0]: " << intersezioni1[0] << endl;
     cout << "inter1[1]: " << intersezioni1[1] << endl;
