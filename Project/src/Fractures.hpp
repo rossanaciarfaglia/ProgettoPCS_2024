@@ -13,6 +13,8 @@ namespace GeometryLibrary {
 struct Fracture{
     unsigned int numVertici;
     MatrixXd Vertici;
+    vector<unsigned int> traccePassanti;
+    vector<unsigned int> tracceNonPassanti;
 
     Fracture() = default; // costruttore di default
 
@@ -75,7 +77,7 @@ inline bool isLess(Vector3d p1, Vector3d p0, MatrixXd retta_inters) {
 
 pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters);
 
-void Find_Trace(Fracture& polygon, Trace& trace, MatrixXd& vert_1, MatrixXd& vert_2, const unsigned int& numVert_1, const unsigned int& numVert_2);
+void Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
