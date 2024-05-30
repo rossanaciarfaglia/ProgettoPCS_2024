@@ -4,35 +4,83 @@
 #include "Eigen/Eigen"
 #include <iostream>
 #include <utility>
+#include <map>
+#include <vector>
 using namespace Eigen;
 using namespace std;
 
 namespace GeometryLibrary {
-struct Fractures{
-    map<unsigned int, MatrixXd> FracturesMap;
-    MatrixXd VerticesCoordinates;
-    vector<vector<unsigned int>> listVertices;
-    unsigned int numFractures;
+struct Fracture{
+    unsigned int numVertici;
+    MatrixXd Vertici;
+    vector<unsigned int> traccePassanti;
+    vector<unsigned int> tracceNonPassanti;
 
-    Fractures() = default; //costruttore di default
+    Fracture() = default; // costruttore di default
 
-    Fractures(const MatrixXd& VerticesCoordinates,
-              const vector<vector<unsigned int>>& listVertices,
-              unsigned int& numFractures,
-              map<unsigned int, MatrixXd>& FracturesMap
+    Fracture(unsigned int& numVertici,
+              MatrixXd& Vertici
               ):
-        VerticesCoordinates(VerticesCoordinates),
-        listVertices(listVertices),
-        numFractures(numFractures)
-    {} //prende in input le coordinate dei vertici e la lista dei vertici e inizializza i memebri corrispondenti VerticesCoordinates e ListVertices con i valori passati come argomenti
+        numVertici(numVertici),
+        Vertici(Vertici)
+        {} // prende in input le coordinate dei vertici e la lista dei vertici e inizializza i membri corrispondenti VerticesCoordinates e ListVertices con i valori passati come argomenti
 
-    vector<vector<unsigned int>> SpheresIntersection();
-    //creiamo una funzione che ci restituisca una mappa con le tracce passanti e una con quelli non passanti
-    pair<map<unsigned int, vector<unsigned int>>, map<unsigned int, vector<unsigned int>>> Passante_NonPassante();
-
-//LEI QUI INSERISCE IL tRIANGULATEpOLYGONS
+    Vector3d Baricentro(MatrixXd &Poligono); //metodo in quanto proprietà della frattura
+    double Raggio(Vector3d &centro, MatrixXd &Poligono);
+    Vector4d TrovaPiano(MatrixXd &poligono);
 };
-void ImportFracturesList(const string& filepath,
-                     Fractures& fractures);
+
+inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
+    double distanza = 0;
+    for (unsigned i = 0; i < 3; i++) {
+        distanza += pow(centro1[i] - centro2[i], 2);
+    }
+    return distanza;
 }
+bool IntersezioneSfere(Fracture& polygons, MatrixXd& poly_1, MatrixXd& poly_2);
+
+
+struct Trace{
+    unsigned int id;
+    pair<Vector3d, Vector3d> Vertices;
+    unsigned int id_fract1;
+    unsigned int id_fract2;
+};
+
+
+Matrix<double,2,3> IntersezionePiani(Fracture &polygons, MatrixXd &poly_1, MatrixXd &poly_2);
+
+
+inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
+    Vector2d solution;
+    MatrixXd A(3,2);
+    A.col(0) = (P1 - P0); // Colonna per il parametro t
+    A.col(1) = (-dir_retta); // Colonna per il parametro s
+    Vector3d b = (Q - P0);
+    if (((P1-P0).cross(dir_retta)).norm() != 0){ //controllo parallelismo
+        solution = A.colPivHouseholderQr().solve(b);
+    }
+    // Risoluzione del sistema lineare
+    else {
+        solution(0) = -1;
+        solution(1) = -1; //assegnamo soluzioni che scarta
+    }
+
+    return solution;
+}
+
+vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici, const unsigned int& numVert);
+
+inline bool isLess(Vector3d p1, Vector3d p0, MatrixXd retta_inters) {
+    return (p1[0] - p0[0]) * retta_inters(1,0) + (p1[1] - p0[1]) * retta_inters(1,1) + (p1[2] - p0[2]) * retta_inters(1,2) < 0;
+}
+
+pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters);
+
+void Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
+
+void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
+
+}
+
 #endif
