@@ -14,6 +14,8 @@ int main()
     string filepath = "./DFN/FR3_data.txt";
     Fracture fracture;
     unordered_map<unsigned int, Fracture> CollectionFractures; // Il costo computazionale è O(1), non O(logn)
+
+
     ImportFracturesList(filepath, fracture, CollectionFractures);
     Trace trace;
     ofstream FileTrace("FileTrace.txt");
@@ -21,6 +23,9 @@ int main()
         cerr << "Error opening output file." << endl;
         return 1;
     }
+
+
+
 
 
     unsigned int idT = 0;
@@ -31,11 +36,11 @@ int main()
 
             if(IntersezioneSfere(fracture, CollectionFractures[idF1].Vertici, CollectionFractures[idF2].Vertici)){
                 cout << "Le sfere delle fratture " << idF1 << " e " << idF2 << " si intersecano" << endl;
-                Find_Trace(fracture, trace, idT, CollectionFractures[idF1], CollectionFractures[idF2]);
+                if(Find_Trace(fracture, trace, idT, CollectionFractures[idF1], CollectionFractures[idF2])){
                 trace.id_fract1 = idF1;
                 trace.id_fract2 = idF2;
                 elenco_tracce.push_back(trace);
-                idT += 1;
+                idT += 1;}
             }
         }
     }
@@ -48,14 +53,8 @@ int main()
             elenco_tracce[i].Vertices.first[2]<<" "<<elenco_tracce[i].Vertices.second[0]<<" "<<elenco_tracce[i].Vertices.second[1]<<" "<<elenco_tracce[i].Vertices.second[2]<<endl;
     }
 
+    OutputSort(elenco_tracce, CollectionFractures);
 
-
-    // Prepare the output file stream
-    ofstream outputFile("No_Intersection.txt");
-    if (!outputFile.is_open()) {
-        cerr << "Error opening output file." << endl;
-        return 1;
-    }
 
 
 
@@ -63,7 +62,6 @@ int main()
     //auto result = fractures.Passante_NonPassante(outputFile);
 
     // Close the output file stream
-    outputFile.close();
     FileTrace.close();
 
     return 0;

@@ -43,6 +43,7 @@ bool IntersezioneSfere(Fracture& polygons, MatrixXd& poly_1, MatrixXd& poly_2);
 struct Trace{
     unsigned int id;
     pair<Vector3d, Vector3d> Vertices;
+    double lenght;
     unsigned int id_fract1;
     unsigned int id_fract2;
 };
@@ -77,10 +78,11 @@ inline bool isLess(Vector3d p1, Vector3d p0, MatrixXd retta_inters) {
 
 pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters);
 
-void Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
+bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
+void OutputSort(const vector<Trace>& elencoTracce, unordered_map<unsigned int, Fracture>& elencoFratture);
 }
 
 #endif

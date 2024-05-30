@@ -1,4 +1,5 @@
 #include "Fractures.hpp"
+#include "MergeSortAlgorithm.hpp"
 #include <iostream>
 #include <Eigen/Dense>
 #include <fstream>
@@ -183,10 +184,10 @@ pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3
 bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTraccia){
     unsigned int passante = 0;
     // controlliamo il primo poligono
-    if (verticiTraccia.first[0] == intersezioni[0][0] && verticiTraccia.first[1] == intersezioni[0][1] && verticiTraccia.first[2] == intersezioni[0][2])
-    { passante += 1;}
-    if(verticiTraccia.second[0] == intersezioni[1][0] && verticiTraccia.second[1] == intersezioni[1][1] && verticiTraccia.second[2] == intersezioni[1][2])
-    { passante += 1;}
+    if (verticiTraccia.first[0] == intersezioni[0][0] && verticiTraccia.first[1] == intersezioni[0][1] && verticiTraccia.first[2] == intersezioni[0][2]){
+        passante += 1;}
+    if(verticiTraccia.second[0] == intersezioni[1][0] && verticiTraccia.second[1] == intersezioni[1][1] && verticiTraccia.second[2] == intersezioni[1][2]){
+        passante += 1;}
 
     if(passante == 2){
         return true;}
@@ -195,19 +196,14 @@ bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTracc
 }
 
 //typedef Matrix<double, 3, 1> Vector3d;
-void Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2) {
+bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2) {
     Matrix<double,2,3> retta_intersezione = IntersezionePiani(polygon, poligono1.Vertici, poligono2.Vertici);
 
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
-    vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
-
-    cout << "inter1[0]: " << intersezioni1[0] << endl;
-    cout << "inter1[1]: " << intersezioni1[1] << endl;
-    cout << "inter2[0]: " << intersezioni2[0] << endl;
-    cout << "inter2[1]: " << intersezioni2[1] << endl;
+    vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, poligono2.Vertici, poligono2.numVertici);
 
     if (intersezioni1.size() < 2 || intersezioni2.size() < 2) {
-        return;
+        return false;
     }
 
     if (isLess(intersezioni1[1], intersezioni1[0], retta_intersezione)) swap(intersezioni1[1], intersezioni1[0]);
@@ -218,17 +214,54 @@ void Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
     cout << "i2[0]: " << intersezioni2[0] << endl;
     cout << "i2[1]: " << intersezioni2[1] << endl;
 
-    trace.id = idT;
     trace.Vertices = Traccia(intersezioni1, intersezioni2, retta_intersezione);
+    trace.lenght = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
+
     if(Tips(intersezioni1, trace.Vertices)){
         poligono1.traccePassanti.push_back(idT);}
     else {poligono1.tracceNonPassanti.push_back(idT);}
     if(Tips(intersezioni2, trace.Vertices)){
         poligono2.traccePassanti.push_back(idT);}
     else {poligono2.tracceNonPassanti.push_back(idT);}
+
+    trace.id = idT;
+
+    return true;
 }
 
 
+void OutputSort (const vector<Trace>& elencoTracce, unordered_map<unsigned int, Fracture>& elencoFratture){
+    map<double, list<unsigned int>> mappaLenght;
+    vector<double> lunghezze;
+    for(unsigned int i = 0; i < elencoTracce.size(); i++){
+        lunghezze.push_back(elencoTracce[i].lenght);
+
+        auto additional = mappaLenght.insert({elencoTracce[i].lenght, {elencoTracce[i].id}});
+        if(!additional.second){
+            (additional.first)->second.push_back(elencoTracce[i].id);
+        }
+    }
+
+    MergeSort(vector<double>& lunghezze);
+    map<double, list<unsigned int>> SortmappaLenght;
+    for(unsigned int i = 0; lunghezze.size(); i++){
+        SortmappaLenght.insert(lunghezze[i], mappaLenght[lunghezze[i]]);
+    }
+
+
+    ofstream FileFracture("FileFratture.txt");
+    if (!FileFracture.is_open()) {
+        cerr << "Error opening output file." << endl;
+        return;
+    }
+
+    for(unsigned int i = 0; i < elencoFratture.size(); i++){
+        FileFracture<<"#FractureId; NumTraces"<<endl;
+        FileFracture<<i<<" "<<elencoFratture[i].traccePassanti.size() + elencoFratture[i].tracceNonPassanti.size()<<endl;
+        FileFracture<<"#TraceId; Tips; Length"<<endl;
+
+    }
+}
 
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures){//nome struttura
