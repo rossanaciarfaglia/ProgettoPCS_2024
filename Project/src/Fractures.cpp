@@ -9,6 +9,7 @@
 #include <vector>
 #include <cmath>
 #include <utility>
+#include <functional> //per usare greater per ordinare in ordine decrescente le chiavi della multimap
 
 using namespace std;
 using namespace Eigen;
@@ -159,11 +160,9 @@ pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3
         beta_0 += (intersezioni2[0][c]-retta_inters(0,c))*retta_inters(1,c);
         beta_1 += (intersezioni2[1][c]-retta_inters(0,c))*retta_inters(1,c);
     }
-    cout << "a0: " << alfa_0 << endl << "a1: " << alfa_1 << endl << "b0: " << beta_0 << endl << "b1: " << beta_1 << endl;
 
     double alfa_start = max(alfa_0, beta_0);
     double alfa_end = min(alfa_1, beta_1);
-    cout << "a_s: " << alfa_start << endl << "a_e: " << alfa_end << endl;
     if (alfa_start > alfa_end){
         // Se non c'è sovrapposizione, possiamo restituire un valore indicativo
         // di nessuna intersezione, come due punti uguali o una coppia di zero.
@@ -175,28 +174,53 @@ pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3
         intersection_start[i] = retta_inters(0,i) + (alfa_start/(norma_r*norma_r))*retta_inters(1,i);
         intersection_end[i] = retta_inters(0,i) + (alfa_end/(norma_r*norma_r))*retta_inters(1,i);
     }
-    cout << "s:" << intersection_start << endl << "e: " << intersection_end << endl;
-
 
     return {intersection_start, intersection_end};
 }
 
 bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTraccia){
+    cout<<"intersezioni"<<endl;
+    for (unsigned int i = 0; i < 3; i++){
+        for (unsigned int j = 0; j < 3; j++){
+            cout<<intersezioni[i][j]<<" ";
+        }
+        cout<<endl;
+    }
+    cout<<"vertici traccia"<<endl;
+    for (unsigned int i = 0; i < 3; i++){
+            cout<<verticiTraccia.first[i]<<" ";
+        }
+        cout<<endl;
+
+        for (unsigned int i = 0; i < 3; i++){
+            cout<<verticiTraccia.second[i]<<" ";
+        }
+        cout<<endl;
+
     unsigned int passante = 0;
+        double tol = 1e-9;
     // controlliamo il primo poligono
-    if (verticiTraccia.first[0] == intersezioni[0][0] && verticiTraccia.first[1] == intersezioni[0][1] && verticiTraccia.first[2] == intersezioni[0][2]){
-        passante += 1;}
-    if(verticiTraccia.second[0] == intersezioni[1][0] && verticiTraccia.second[1] == intersezioni[1][1] && verticiTraccia.second[2] == intersezioni[1][2]){
-        passante += 1;}
+        if (fabs(verticiTraccia.first[0] - intersezioni[0][0]) <= tol &&
+            fabs(verticiTraccia.first[1] - intersezioni[0][1]) <= tol &&
+            fabs(verticiTraccia.first[2] - intersezioni[0][2]) <= tol) {
+        passante += 1;
+    }
+
+        if(fabs(verticiTraccia.second[0] - intersezioni[1][0]) <= tol &&
+           fabs(verticiTraccia.second[1] - intersezioni[1][1]) <= tol &&
+           fabs(verticiTraccia.second[2] - intersezioni[1][2]) <= tol) {
+        passante += 1;
+    }
 
     if(passante == 2){
         return true;}
-    else {return false;}
-
+    else {
+            return false;}
 }
 
 //typedef Matrix<double, 3, 1> Vector3d;
 bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2) {
+    bool tips;
     Matrix<double,2,3> retta_intersezione = IntersezionePiani(polygon, poligono1.Vertici, poligono2.Vertici);
 
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
@@ -209,60 +233,32 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
     if (isLess(intersezioni1[1], intersezioni1[0], retta_intersezione)) swap(intersezioni1[1], intersezioni1[0]);
     if (isLess(intersezioni2[1], intersezioni2[0], retta_intersezione)) swap(intersezioni2[1], intersezioni2[0]);
 
-    cout << "i1[0]:" << intersezioni1[0] << endl;
-    cout << "i1[1]: " << intersezioni1[1] << endl;
-    cout << "i2[0]: " << intersezioni2[0] << endl;
-    cout << "i2[1]: " << intersezioni2[1] << endl;
-
     trace.Vertices = Traccia(intersezioni1, intersezioni2, retta_intersezione);
+    //if (isLess(trace.Vertices.first, trace.Vertices.second, retta_intersezione)) swap(trace.Vertices.second, trace.Vertices.first);
     trace.lenght = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
-
-    if(Tips(intersezioni1, trace.Vertices)){
-        poligono1.traccePassanti.push_back(idT);}
+    tips = Tips(intersezioni1, trace.Vertices);
+    if(tips)
+    {poligono1.traccePassanti.push_back(idT);}
     else {poligono1.tracceNonPassanti.push_back(idT);}
-    if(Tips(intersezioni2, trace.Vertices)){
+    tips =Tips(intersezioni2, trace.Vertices);
+    if(tips){
         poligono2.traccePassanti.push_back(idT);}
     else {poligono2.tracceNonPassanti.push_back(idT);}
-
     trace.id = idT;
-
     return true;
 }
 
 
-void OutputSort (const vector<Trace>& elencoTracce, unordered_map<unsigned int, Fracture>& elencoFratture){
-    map<double, list<unsigned int>> mappaLenght;
-    vector<double> lunghezze;
-    for(unsigned int i = 0; i < elencoTracce.size(); i++){
-        lunghezze.push_back(elencoTracce[i].lenght);
-
-        auto additional = mappaLenght.insert({elencoTracce[i].lenght, {elencoTracce[i].id}});
-        if(!additional.second){
-            (additional.first)->second.push_back(elencoTracce[i].id);
-        }
+void OutputSort (const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
+    multimap<double, unsigned int, greater<double>> mappaLength; //li ordina gia in base alla chiave in ordine decrescente
+    cout<< IdTrace.size()<< endl;
+    for(unsigned int i = 0; i < IdTrace.size(); i++){
+        mappaLength.insert({elencoTracce[IdTrace[i]].lenght, IdTrace[i]});
     }
-
-    MergeSort(vector<double>& lunghezze);
-    map<double, list<unsigned int>> SortmappaLenght;
-    for(unsigned int i = 0; lunghezze.size(); i++){
-        SortmappaLenght.insert(lunghezze[i], mappaLenght[lunghezze[i]]);
-    }
-
-
-    ofstream FileFracture("FileFratture.txt");
-    if (!FileFracture.is_open()) {
-        cerr << "Error opening output file." << endl;
-        return;
-    }
-
-    for(unsigned int i = 0; i < elencoFratture.size(); i++){
-        FileFracture<<"#FractureId; NumTraces"<<endl;
-        FileFracture<<i<<" "<<elencoFratture[i].traccePassanti.size() + elencoFratture[i].tracceNonPassanti.size()<<endl;
-        FileFracture<<"#TraceId; Tips; Length"<<endl;
-
+    for (const auto& elem : mappaLength) {
+       FileFracture<<elem.second <<" "<<tips<<" "<< elem.first << endl;
     }
 }
-
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures){//nome struttura
     ifstream file(filepath);

@@ -44,8 +44,8 @@ struct Trace{
     unsigned int id;
     pair<Vector3d, Vector3d> Vertices;
     double lenght;
-    unsigned int id_fract1;
-    unsigned int id_fract2;
+    unsigned int id1;
+    unsigned int id2;
 };
 
 
@@ -82,7 +82,7 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& po
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
-void OutputSort(const vector<Trace>& elencoTracce, unordered_map<unsigned int, Fracture>& elencoFratture);
+void OutputSort(const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
 }
 
 #endif
