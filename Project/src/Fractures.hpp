@@ -48,6 +48,13 @@ struct Trace{
     unsigned int id2;
 };
 
+/*struct Compare {
+    bool operator()(const double& a, const double& b) const {
+        return a > b; // Ordine decrescente
+    }
+};*/ // struct utilizzata dalla multimappa per ordinare gli elementi in ordine decrescente
+
+
 
 Matrix<double,2,3> IntersezionePiani(Fracture &polygons, MatrixXd &poly_1, MatrixXd &poly_2);
 

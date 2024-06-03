@@ -250,15 +250,34 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
 
 
 void OutputSort (const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
-    multimap<double, unsigned int, greater<double>> mappaLength; //li ordina gia in base alla chiave in ordine decrescente
+    multimap<double, unsigned int> mappaLength; //li ordina gia in base alla chiave in ordine decrescente
     cout<< IdTrace.size()<< endl;
     for(unsigned int i = 0; i < IdTrace.size(); i++){
         mappaLength.insert({elencoTracce[IdTrace[i]].lenght, IdTrace[i]});
     }
-    for (const auto& elem : mappaLength) {
+    /*for (const auto& elem : mappaLength) {
        FileFracture<<elem.second <<" "<<tips<<" "<< elem.first << endl;
+    }*/
+    /*for(auto it = mappaLength.rbegin(); it != mappaLength.rend(); ++it){
+        FileFracture<< it->second <<" "<<tips<<" "<< it->first << endl;
+    }*/
+    auto it = mappaLength.rbegin(); // Ottieni un iteratore all'ultimo elemento della multimap
+
+    // Itera dalla fine alla fine della multimap
+    for (it ; it != mappaLength.rend(); --it) {
+        const auto& elem = *it;
+        // Fai qualcosa con elem
+        FileFracture << elem.second << " " << tips << " " << elem.first << endl;
+
     }
 }
+/*void OutputSort (const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
+    map<unsigned int, double> mappaLength; // crea una mappa chiave = idTraccia, valore = lunghezza, ordino poi le lunghezze
+    for(unsigned int i = 0; i < IdTrace.size(); i++){
+        mappaLength.insert({IdTrace[i], elencoTracce[IdTrace[i]].lenght});
+    }
+
+}*/
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures){//nome struttura
     ifstream file(filepath);
