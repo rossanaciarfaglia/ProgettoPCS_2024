@@ -227,7 +227,6 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
     vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, poligono2.Vertici, poligono2.numVertici);
 
-
     if (intersezioni1.size() < 2 || intersezioni2.size() < 2) {
         return false;
     }
@@ -237,9 +236,7 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
 
 
     pair<Vector3d, Vector3d> a = Traccia(intersezioni1, intersezioni2, retta_intersezione);
-    if(a.first == Vector3d::Zero() && a.second == Vector3d::Zero()){
-        return false;
-    }
+    if(a.first != Vector3d::Zero() && a.second != Vector3d::Zero()){
     trace.Vertices = a;
     //if (isLess(trace.Vertices.first, trace.Vertices.second, retta_intersezione)) swap(trace.Vertices.second, trace.Vertices.first);
     trace.lenght = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
@@ -254,6 +251,8 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
     else {poligono2.tracceNonPassanti.push_back(idT);}
     trace.id = idT;
     return true;
+    }
+    else{return false;}
 }
 
 
