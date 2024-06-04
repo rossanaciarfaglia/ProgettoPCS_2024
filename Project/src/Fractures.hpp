@@ -43,9 +43,17 @@ bool IntersezioneSfere(Fracture& polygons, MatrixXd& poly_1, MatrixXd& poly_2);
 struct Trace{
     unsigned int id;
     pair<Vector3d, Vector3d> Vertices;
-    unsigned int id_fract1;
-    unsigned int id_fract2;
+    double lenght;
+    unsigned int id1;
+    unsigned int id2;
 };
+
+/*struct Compare {
+    bool operator()(const double& a, const double& b) const {
+        return a > b; // Ordine decrescente
+    }
+};*/ // struct utilizzata dalla multimappa per ordinare gli elementi in ordine decrescente
+
 
 
 Matrix<double,2,3> IntersezionePiani(Fracture &polygons, MatrixXd &poly_1, MatrixXd &poly_2);
@@ -77,10 +85,14 @@ inline bool isLess(Vector3d p1, Vector3d p0, MatrixXd retta_inters) {
 
 pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters);
 
-void Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
+bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
+inline bool compare(const pair<unsigned int, double>& coppia1, const pair<unsigned int, double>& coppia2){
+    return coppia1.second > coppia2.second;
+}
+void OutputSort(const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
 }
 
 #endif
