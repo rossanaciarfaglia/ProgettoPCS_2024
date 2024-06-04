@@ -11,7 +11,7 @@ using namespace GeometryLibrary;
 int main()
 {
     bool tips;
-    string filepath = "./DFN/FR3_data.txt";
+    string filepath = "./DFN/FR80_data.txt";
     Fracture fracture;
     unordered_map<unsigned int, Fracture> CollectionFractures; // Il costo computazionale è O(1), non O(logn)
 
@@ -61,9 +61,9 @@ int main()
         FileFracture<<"#TraceId; Tips; Length"<<endl;
         //vediamo se sta in passanti o non passanti
         tips = false;
-        OutputSort(CollectionFractures[numFratture].tracceNonPassanti, elenco_tracce, FileFracture, tips);
-        tips = true;
         OutputSort(CollectionFractures[numFratture].traccePassanti, elenco_tracce, FileFracture, tips);
+        tips = true;
+        OutputSort(CollectionFractures[numFratture].tracceNonPassanti, elenco_tracce, FileFracture, tips);
     }
 
 

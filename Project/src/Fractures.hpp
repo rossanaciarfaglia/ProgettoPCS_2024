@@ -89,6 +89,9 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& po
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
+inline bool compare(const pair<unsigned int, double>& coppia1, const pair<unsigned int, double>& coppia2){
+    return coppia1.second > coppia2.second;
+}
 void OutputSort(const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
 }
 
