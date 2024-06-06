@@ -55,8 +55,6 @@ Vector4d Fracture::TrovaPiano(MatrixXd &poligono){
         u[coordinate] = poligono(coordinate,2) - poligono(coordinate,0);   // u = P2-P0
         v[coordinate] = poligono(coordinate,1) - poligono(coordinate,0);   // v = P1-P0
     }
-    // double u_norm = u.norm();
-    // double v_norm = v.norm();
 
     Vector4d piano;   // è il vettore normale n + la costante d
     piano[0] = (u[1]*v[2]-v[1]*u[2]);
@@ -69,13 +67,13 @@ Vector4d Fracture::TrovaPiano(MatrixXd &poligono){
 }
 
 
-bool IntersezioneSfere(Fracture& polygons, MatrixXd& poly_1, MatrixXd& poly_2){
+bool IntersezioneSfere(Fracture& polygon1, Fracture& polygon2){
     double tol_quad = 100 * numeric_limits<double>::epsilon() * numeric_limits<double>::epsilon();
 
-    Vector3d baricentro1 = polygons.Baricentro(poly_1);
-    double R1 = polygons.Raggio(baricentro1, poly_1);
-    Vector3d baricentro2 = polygons.Baricentro(poly_2);
-    double R2 = polygons.Raggio(baricentro2, poly_2);
+    Vector3d baricentro1 = polygon1.Baricentro(polygon1.Vertici);
+    double R1 = polygon1.Raggio(baricentro1, polygon1.Vertici);
+    Vector3d baricentro2 = polygon2.Baricentro(polygon2.Vertici);
+    double R2 = polygon2.Raggio(baricentro2, polygon2.Vertici);
     if (DistanzaEuclidea(baricentro1, baricentro2) - (R1+R2+2*sqrt(R1*R2)) < tol_quad){
         return true;
     }
@@ -84,10 +82,10 @@ bool IntersezioneSfere(Fracture& polygons, MatrixXd& poly_1, MatrixXd& poly_2){
 
 
 
-Matrix<double,2,3> IntersezionePiani(Fracture &polygon, MatrixXd &poly_1, MatrixXd &poly_2) {
+Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2) {
 
-    Vector4d n1 = polygon.TrovaPiano(poly_1);
-    Vector4d n2 = polygon.TrovaPiano(poly_2);
+    Vector4d n1 = polygon1.TrovaPiano(polygon1.Vertici);
+    Vector4d n2 = polygon2.TrovaPiano(polygon2.Vertici);
     Vector3d t;
     t[0] = n1[1]*n2[2]-n1[2]*n2[1];
     t[1] = n1[2]*n2[0]-n1[0]*n2[2];
@@ -124,13 +122,14 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, MatrixXd& verti
     intersezioni.reserve(2);
     Vector2d system_solution;
     for(unsigned int c = 0; c < numVert; c++){
-        if (c == numVert - 1){ // l'ultimo vertice viene confrontato con il primo
-            system_solution = ParametriRette(vertici.col(c), vertici.col(0), retta.row(0), retta.row(1));
-            // controllo che alpha sia coerente anche con la coordinata z : (1-alpha)z0+alpha*z1 = qz+tdz
-        }
-        else {
-            system_solution = ParametriRette(vertici.col(c), vertici.col(c+1), retta.row(0), retta.row(1));
-        }
+        // if (c == numVert - 1){ // l'ultimo vertice viene confrontato con il primo
+        //     system_solution = ParametriRette(vertici.col(c), vertici.col(0), retta.row(0), retta.row(1));
+        //     // controllo che alpha sia coerente anche con la coordinata z : (1-alpha)z0+alpha*z1 = qz+tdz
+        // }
+        // else {
+        //     system_solution = ParametriRette(vertici.col(c), vertici.col(c+1), retta.row(0), retta.row(1));
+        // }
+        system_solution = ParametriRette(vertici.col(c), vertici.col((c+1)%numVert), retta.row(0), retta.row(1));
 
         if (system_solution[0] >= 0 && system_solution[0] <= 1) {   // Questo è il segmento
             // Calcola le coordinate del punto di intersezione
@@ -164,7 +163,7 @@ pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3
 
     double alfa_start = max(alfa_0, beta_0);
     double alfa_end = min(alfa_1, beta_1);
-    if (alfa_start > alfa_end){
+    if (alfa_start >= alfa_end){
         // Se non c'è sovrapposizione, possiamo restituire un valore indicativo
         // di nessuna intersezione, come due punti uguali o una coppia di zero.
         return {Vector3d::Zero(), Vector3d::Zero()};
@@ -179,50 +178,35 @@ pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3
     return {intersection_start, intersection_end};
 }
 
+
 bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTraccia){
-    cout<<"intersezioni"<<endl;
-    for (unsigned int i = 0; i < 3; i++){
-        for (unsigned int j = 0; j < 3; j++){
-            cout<<intersezioni[i][j]<<" ";
-        }
-        cout<<endl;
-    }
-    cout<<"vertici traccia"<<endl;
-    for (unsigned int i = 0; i < 3; i++){
-            cout<<verticiTraccia.first[i]<<" ";
-        }
-        cout<<endl;
-
-        for (unsigned int i = 0; i < 3; i++){
-            cout<<verticiTraccia.second[i]<<" ";
-        }
-        cout<<endl;
-
     unsigned int passante = 0;
-        double tol = 1e-9;
+    double tol = 1e-9;
     // controlliamo il primo poligono
-        if (fabs(verticiTraccia.first[0] - intersezioni[0][0]) <= tol &&
-            fabs(verticiTraccia.first[1] - intersezioni[0][1]) <= tol &&
-            fabs(verticiTraccia.first[2] - intersezioni[0][2]) <= tol) {
+    if (fabs(verticiTraccia.first[0] - intersezioni[0][0]) <= tol &&
+        fabs(verticiTraccia.first[1] - intersezioni[0][1]) <= tol &&
+        fabs(verticiTraccia.first[2] - intersezioni[0][2]) <= tol) {
         passante += 1;
     }
 
-        if(fabs(verticiTraccia.second[0] - intersezioni[1][0]) <= tol &&
-           fabs(verticiTraccia.second[1] - intersezioni[1][1]) <= tol &&
-           fabs(verticiTraccia.second[2] - intersezioni[1][2]) <= tol) {
+    // controlliamo il secondo
+    if(fabs(verticiTraccia.second[0] - intersezioni[1][0]) <= tol &&
+       fabs(verticiTraccia.second[1] - intersezioni[1][1]) <= tol &&
+       fabs(verticiTraccia.second[2] - intersezioni[1][2]) <= tol) {
         passante += 1;
     }
 
     if(passante == 2){
         return true;}
-    else {
-            return false;}
+
+    return false;
 }
 
+
 //typedef Matrix<double, 3, 1> Vector3d;
-bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2) {
+bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2) {
     bool tips;
-    Matrix<double,2,3> retta_intersezione = IntersezionePiani(polygon, poligono1.Vertici, poligono2.Vertici);
+    Matrix<double,2,3> retta_intersezione = IntersezionePiani(poligono1, poligono2);
 
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
     vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, poligono2.Vertici, poligono2.numVertici);
@@ -236,23 +220,24 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
 
 
     pair<Vector3d, Vector3d> a = Traccia(intersezioni1, intersezioni2, retta_intersezione);
-    if(a.first == Vector3d::Zero() && a.second == Vector3d::Zero()){
-        return false;
-    }
-    trace.Vertices = a;
-    //if (isLess(trace.Vertices.first, trace.Vertices.second, retta_intersezione)) swap(trace.Vertices.second, trace.Vertices.first);
-    trace.lenght = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
-    tips = Tips(intersezioni1, trace.Vertices);
-    if(tips)
-    {poligono1.traccePassanti.push_back(idT);}
-    else {poligono1.tracceNonPassanti.push_back(idT);}
+    if(a.first != Vector3d::Zero() && a.second != Vector3d::Zero()){
+        trace.Vertices = a;
+        trace.Vertices = Traccia(intersezioni1, intersezioni2, retta_intersezione);
+        trace.lenght = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
+        tips = Tips(intersezioni1, trace.Vertices);
+        if(tips)
+        {poligono1.traccePassanti.push_back(idT);}
+        else {poligono1.tracceNonPassanti.push_back(idT);}
 
-    tips =Tips(intersezioni2, trace.Vertices);
-    if(tips){
-        poligono2.traccePassanti.push_back(idT);}
-    else {poligono2.tracceNonPassanti.push_back(idT);}
-    trace.id = idT;
-    return true;
+        tips = Tips(intersezioni2, trace.Vertices);
+        if(tips){
+            poligono2.traccePassanti.push_back(idT);}
+        else {poligono2.tracceNonPassanti.push_back(idT);}
+        trace.id = idT;
+        return true;
+    }
+
+    return false;
 }
 
 

@@ -37,7 +37,7 @@ inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
     }
     return distanza;
 }
-bool IntersezioneSfere(Fracture& polygons, MatrixXd& poly_1, MatrixXd& poly_2);
+bool IntersezioneSfere(Fracture& polygon1, Fracture& polygon2);
 
 
 struct Trace{
@@ -56,7 +56,7 @@ struct Trace{
 
 
 
-Matrix<double,2,3> IntersezionePiani(Fracture &polygons, MatrixXd &poly_1, MatrixXd &poly_2);
+Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2);
 
 
 inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
@@ -85,7 +85,9 @@ inline bool isLess(Vector3d p1, Vector3d p0, MatrixXd retta_inters) {
 
 pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters);
 
-bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
+bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTraccia);
+
+bool Find_Trace(Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
