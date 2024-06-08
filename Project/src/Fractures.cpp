@@ -1,5 +1,4 @@
 #include "Fractures.hpp"
-#include "MergeSortAlgorithm.hpp"
 #include <iostream>
 #include <Eigen/Dense>
 #include <fstream>
@@ -122,14 +121,7 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, MatrixXd& verti
     intersezioni.reserve(2);
     Vector2d system_solution;
     for(unsigned int c = 0; c < numVert; c++){
-        // if (c == numVert - 1){ // l'ultimo vertice viene confrontato con il primo
-        //     system_solution = ParametriRette(vertici.col(c), vertici.col(0), retta.row(0), retta.row(1));
-        //     // controllo che alpha sia coerente anche con la coordinata z : (1-alpha)z0+alpha*z1 = qz+tdz
-        // }
-        // else {
-        //     system_solution = ParametriRette(vertici.col(c), vertici.col(c+1), retta.row(0), retta.row(1));
-        // }
-        system_solution = ParametriRette(vertici.col(c), vertici.col((c+1)%numVert), retta.row(0), retta.row(1));
+        system_solution = ParametriRetta(vertici.col(c), vertici.col((c+1)%numVert), retta.row(0), retta.row(1));
 
         if (system_solution[0] >= 0 && system_solution[0] <= 1) {   // Questo è il segmento
             // Calcola le coordinate del punto di intersezione
@@ -139,7 +131,16 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, MatrixXd& verti
             intersezioni.push_back(punto_intersezione);
         }
         //altrimenti non ci sono intersezioni lato, retta di intersezione piani
-        //non ci serve memorizzarli
+        //cout << "intersezioni lato " << c << " e successivo:" << endl << punto_intersezione[0] << " " << punto_intersezione[1] << " " << punto_intersezione[2] << " " << endl;
+    }
+
+    if(intersezioni.size()==0){
+        intersezioni.push_back({INFINITY,INFINITY,INFINITY});
+    }
+
+    cout << "intersezioni:" << endl;
+    for (int i = 0; i< intersezioni.size(); i++){
+        cout << intersezioni[i][0] << " " << intersezioni[i][1] << " " << intersezioni[i][2] << " " << endl << endl;
     }
     return intersezioni;
 }
