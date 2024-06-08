@@ -226,14 +226,7 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
 
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
     vector<Vector3d> intersezioni2 = Intersection_Point(retta_intersezione, poligono2.Vertici, poligono2.numVertici);
-<<<<<<< HEAD
 
-    cout << "inter1[0]: " << intersezioni1[0] << endl;
-    cout << "inter1[1]: " << intersezioni1[1] << endl;
-    cout << "inter2[0]: " << intersezioni2[0] << endl;
-    cout << "inter2[1]: " << intersezioni2[1] << endl;
-=======
->>>>>>> 2dee1827ee75f087d6261ed90e0bb71b793df925
 
     if (intersezioni1.size() < 2 || intersezioni2.size() < 2) {
         return false;
@@ -244,7 +237,7 @@ bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT,Fracture& pol
 
 
     pair<Vector3d, Vector3d> a = Traccia(intersezioni1, intersezioni2, retta_intersezione);
-    if(a.first == Vector3d::Zero() && a.second == Vector3d::Zero()){
+    if(a.first[0] == 0  && a.second[0] == 0){
         return false;
     }
     trace.Vertices = a;

@@ -11,7 +11,7 @@ using namespace GeometryLibrary;
 int main()
 {
     bool tips;
-    string filepath = "./DFN/FR80_data.txt";
+    string filepath = "./DFN/FR3_data.txt";
     Fracture fracture;
     unordered_map<unsigned int, Fracture> CollectionFractures; // Il costo computazionale è O(1), non O(logn)
 
