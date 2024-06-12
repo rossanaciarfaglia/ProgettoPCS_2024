@@ -258,7 +258,6 @@ void OutputSort (const vector<unsigned int>& IdTrace, const vector<Trace>& elenc
     }
 }
 
-// mettere un controllo sui lati: se dei vertici di un poligono coincidono
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures){//nome struttura
     ifstream file(filepath);
     unsigned int numFratture;
