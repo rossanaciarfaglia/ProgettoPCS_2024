@@ -17,7 +17,7 @@ using namespace Eigen;
 namespace GeometryLibrary {
 
 // I dati del baricentro sono in un vettore lungo 3
-Vector3d Fracture::Baricentro(MatrixXd &poligono) {
+Vector3d Fracture::Baricentro(Matrix3Xd &poligono) {
     Vector3d baricentro;
     for(unsigned int riga = 0; riga < 3; riga++) {
         double sum = 0;
@@ -31,7 +31,7 @@ Vector3d Fracture::Baricentro(MatrixXd &poligono) {
 
 
 // Raggio delle sfere !!AL QUADRATO!!
-double Fracture::Raggio(Vector3d &baricentro, MatrixXd &poligono) {
+double Fracture::Raggio(Vector3d &baricentro, Matrix3Xd &poligono) {
     double R = 0;
     double dist;
     for (unsigned int colonna=0; colonna<numVertici; colonna++){
@@ -47,7 +47,7 @@ double Fracture::Raggio(Vector3d &baricentro, MatrixXd &poligono) {
 }
 
 
-Vector4d Fracture::TrovaPiano(MatrixXd &poligono){
+Vector4d Fracture::TrovaPiano(Matrix3Xd &poligono){
     Vector3d u;
     Vector3d v;
     for (unsigned int coordinate=0; coordinate<3; coordinate++){           // (Sono x,y e z)
@@ -115,7 +115,7 @@ Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2) {
 }
 
 
-vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, MatrixXd& vertici, const unsigned int& numVert){
+vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, Matrix3Xd& vertici, const unsigned int& numVert){
     Vector3d punto_intersezione;
     vector<Vector3d> intersezioni;
     intersezioni.reserve(2);
@@ -131,16 +131,10 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, MatrixXd& verti
             intersezioni.push_back(punto_intersezione);
         }
         //altrimenti non ci sono intersezioni lato, retta di intersezione piani
-        //cout << "intersezioni lato " << c << " e successivo:" << endl << punto_intersezione[0] << " " << punto_intersezione[1] << " " << punto_intersezione[2] << " " << endl;
     }
 
     if(intersezioni.size()==0){
         intersezioni.push_back({INFINITY,INFINITY,INFINITY});
-    }
-
-    cout << "intersezioni:" << endl;
-    for (int i = 0; i< intersezioni.size(); i++){
-        cout << intersezioni[i][0] << " " << intersezioni[i][1] << " " << intersezioni[i][2] << " " << endl << endl;
     }
     return intersezioni;
 }
@@ -221,10 +215,9 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
     if (isLess(intersezioni2[1], intersezioni2[0], retta_intersezione)) swap(intersezioni2[1], intersezioni2[0]);
 
 
-    pair<Vector3d, Vector3d> a = Traccia(intersezioni1, intersezioni2, retta_intersezione);
+    pair<Vector3d, Vector3d> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione);
     if(a.first != Vector3d::Zero() && a.second != Vector3d::Zero()){
-        trace.Vertices = a;
-        trace.Vertices = Traccia(intersezioni1, intersezioni2, retta_intersezione);
+        trace.Vertices = tr;
         trace.lenght = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
         tips = Tips(intersezioni1, trace.Vertices);
         if(tips)
@@ -243,7 +236,7 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
 }
 
 
-void OutputSort (const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
+void OutputSort (vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
     unordered_map<unsigned int, double> dizionario;
     for(unsigned int i = 0; i < IdTrace.size(); i++){
         dizionario.insert({IdTrace[i], elencoTracce[IdTrace[i]].lenght});
@@ -252,9 +245,12 @@ void OutputSort (const vector<unsigned int>& IdTrace, const vector<Trace>& elenc
     vector<pair<unsigned int, double>> coppie_traccia(dizionario.begin(), dizionario.end());
     //ordinamento del vettore (in ordine decrescente)
     sort(coppie_traccia.begin(), coppie_traccia.end(), compare);
+    unsigned int count = 0;
     for (const auto& elem : coppie_traccia) {
-        // Fai qualcosa con elem
         FileFracture << elem.first << " " << tips << " " << elem.second << endl;
+        if(IdTrace[count] != elem.first)
+        {IdTrace[count] = elem.first;}
+        count++;
     }
 }
 

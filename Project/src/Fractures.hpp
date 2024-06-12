@@ -12,22 +12,22 @@ using namespace std;
 namespace GeometryLibrary {
 struct Fracture{
     unsigned int numVertici;
-    MatrixXd Vertici;
+    Matrix3Xd Vertici;
     vector<unsigned int> traccePassanti;
     vector<unsigned int> tracceNonPassanti;
 
     Fracture() = default; // costruttore di default
 
     Fracture(unsigned int& numVertici,
-              MatrixXd& Vertici
+              Matrix3Xd& Vertici
               ):
         numVertici(numVertici),
         Vertici(Vertici)
         {} // prende in input le coordinate dei vertici e la lista dei vertici e inizializza i membri corrispondenti VerticesCoordinates e ListVertices con i valori passati come argomenti
 
-    Vector3d Baricentro(MatrixXd &Poligono); //metodo in quanto proprietà della frattura
-    double Raggio(Vector3d &centro, MatrixXd &Poligono);
-    Vector4d TrovaPiano(MatrixXd &poligono);
+    Vector3d Baricentro(Matrix3Xd &Poligono); //metodo in quanto proprietà della frattura
+    double Raggio(Vector3d &centro, Matrix3Xd &Poligono);
+    Vector4d TrovaPiano(Matrix3Xd &Poligono);
 };
 
 inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
@@ -78,9 +78,9 @@ inline Vector2d ParametriRetta (const Vector3d& P0, const Vector3d& P1, const Ve
     return solution;
 }
 
-vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici, const unsigned int& numVert);
+vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, Matrix3Xd &vertici, const unsigned int& numVert);
 
-inline bool isLess(Vector3d p1, Vector3d p0, MatrixXd retta_inters) {
+inline bool isLess(Vector3d p1, Vector3d p0, Matrix<double,2,3> retta_inters) {
     return (p1[0] - p0[0]) * retta_inters(1,0) + (p1[1] - p0[1]) * retta_inters(1,1) + (p1[2] - p0[2]) * retta_inters(1,2) < 0;
 }
 
@@ -95,7 +95,7 @@ void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_m
 inline bool compare(const pair<unsigned int, double>& coppia1, const pair<unsigned int, double>& coppia2){
     return coppia1.second > coppia2.second;
 }
-void OutputSort(const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
+void OutputSort(vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
 }
 
 #endif
