@@ -1,4 +1,5 @@
 #include "Fractures.hpp"
+#include "SottoPoligoni.hpp"
 #include "Eigen/Eigen"
 #include "UCDUtilities.hpp"
 #include <fstream>
@@ -66,6 +67,31 @@ int main()
         OutputSort(CollectionFractures[numFratture].tracceNonPassanti, elenco_tracce, FileFracture, tips);
     }
 
+
+
+    //per la seconda parte
+    //cicliamo sulle fratture
+    list<unsigned int> Sotto_poligoni;
+    for (unsigned int i = 0; i <CollectionFractures.size() ; i++){
+        map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
+        //prima divisione
+        DividiPoligono(elenco_tracce[CollectionFractures[i].traccePassanti[0]], CollectionFractures[i], Sotto_poligoni, elenco_tracce);
+        //iteriamo sulle tracce dei poligoni
+        //Tracce_SottoPoligoni[0]; BHOOOO
+        //Faccio tutte le altre suddivisioni
+        for(unsigned int k = 1; k < fracture.traccePassanti.size() ; k++ ){  //itero su tutte le passanti
+            for(unsigned int j = 0; j < Tracce_SottoPoligoni.size(); j++){
+            DividiPoligono(elenco_tracce[fracture.traccePassanti[k]], Tracce_SottoPoligoni[j], Sotto_poligoni, elenco_tracce);
+
+            }
+        }
+        for(unsigned int m = 0; m < fracture.tracceNonPassanti.size(); m++){
+            for(unsigned int y = 0; y < Tracce_SottoPoligoni.size(); y++){
+            DividiPoligono(elenco_tracce[fracture.tracceNonPassanti[m]],Tracce_SottoPoligoni[y], Sotto_poligoni, elenco_tracce);
+        }
+       }
+
+    }
 
     // Call the Passante_NonPassante function
     //auto result = fractures.Passante_NonPassante(outputFile);
