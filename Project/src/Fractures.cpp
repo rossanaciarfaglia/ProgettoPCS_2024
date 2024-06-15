@@ -215,6 +215,7 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
     if (isLess(intersezioni2[1], intersezioni2[0], retta_intersezione)) swap(intersezioni2[1], intersezioni2[0]);
 
 
+
     pair<Vector3d, Vector3d> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione);
     if(a.first != Vector3d::Zero() && a.second != Vector3d::Zero()){
         trace.Vertices = tr;
@@ -230,6 +231,7 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
         else {poligono2.tracceNonPassanti.push_back(idT);}
         trace.id = idT;
         return true;
+
     }
 
     return false;
