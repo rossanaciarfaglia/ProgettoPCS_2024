@@ -12,22 +12,22 @@ using namespace std;
 namespace GeometryLibrary {
 struct Fracture{
     unsigned int numVertici;
-    MatrixXd Vertici;
+    Matrix3Xd Vertici;
     vector<unsigned int> traccePassanti;
     vector<unsigned int> tracceNonPassanti;
 
     Fracture() = default; // costruttore di default
 
     Fracture(unsigned int& numVertici,
-              MatrixXd& Vertici
+              Matrix3Xd& Vertici
               ):
         numVertici(numVertici),
         Vertici(Vertici)
         {} // prende in input le coordinate dei vertici e la lista dei vertici e inizializza i membri corrispondenti VerticesCoordinates e ListVertices con i valori passati come argomenti
 
-    Vector3d Baricentro(MatrixXd &Poligono); //metodo in quanto proprietà della frattura
-    double Raggio(Vector3d &centro, MatrixXd &Poligono);
-    Vector4d TrovaPiano(MatrixXd &poligono);
+    Vector3d Baricentro(Matrix3Xd &Poligono); //metodo in quanto proprietà della frattura
+    double Raggio(Vector3d &centro, Matrix3Xd &Poligono);
+    Vector4d TrovaPiano(Matrix3Xd &Poligono);
 };
 
 inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
@@ -37,7 +37,8 @@ inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
     }
     return distanza;
 }
-bool IntersezioneSfere(Fracture& polygons, MatrixXd& poly_1, MatrixXd& poly_2);
+
+bool IntersezioneSfere(Fracture& polygon1, Fracture& polygon2);
 
 
 struct Trace{
@@ -56,10 +57,10 @@ struct Trace{
 
 
 
-Matrix<double,2,3> IntersezionePiani(Fracture &polygons, MatrixXd &poly_1, MatrixXd &poly_2);
+Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2);
 
 
-inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
+inline Vector2d ParametriRetta (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
     Vector2d solution;
     MatrixXd A(3,2);
     A.col(0) = (P1 - P0); // Colonna per il parametro t
@@ -77,22 +78,24 @@ inline Vector2d ParametriRette (const Vector3d& P0, const Vector3d& P1, const Ve
     return solution;
 }
 
-vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, MatrixXd &vertici, const unsigned int& numVert);
+vector<Vector3d> Intersection_Point(Matrix<double,2,3> &retta, Matrix3Xd &vertici, const unsigned int& numVert);
 
-inline bool isLess(Vector3d p1, Vector3d p0, MatrixXd retta_inters) {
+inline bool isLess(Vector3d p1, Vector3d p0, Matrix<double,2,3> retta_inters) {
     return (p1[0] - p0[0]) * retta_inters(1,0) + (p1[1] - p0[1]) * retta_inters(1,1) + (p1[2] - p0[2]) * retta_inters(1,2) < 0;
 }
 
 pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters);
 
-bool Find_Trace(Fracture& polygon, Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
+bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTraccia);
+
+bool Find_Trace(Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
 inline bool compare(const pair<unsigned int, double>& coppia1, const pair<unsigned int, double>& coppia2){
     return coppia1.second > coppia2.second;
 }
-void OutputSort(const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
+void OutputSort(vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
 }
 
 #endif
