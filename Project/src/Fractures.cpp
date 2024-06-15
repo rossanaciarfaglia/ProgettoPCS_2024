@@ -217,16 +217,14 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
 
 
     pair<Vector3d, Vector3d> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione);
-    if(a.first != Vector3d::Zero() && a.second != Vector3d::Zero()){
+    if(tr.first != Vector3d::Zero() && tr.second != Vector3d::Zero()){
         trace.Vertices = tr;
         trace.lenght = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
-        tips = Tips(intersezioni1, trace.Vertices);
-        if(tips)
+        if(Tips(intersezioni1, trace.Vertices))
         {poligono1.traccePassanti.push_back(idT);}
         else {poligono1.tracceNonPassanti.push_back(idT);}
 
-        tips = Tips(intersezioni2, trace.Vertices);
-        if(tips){
+        if(Tips(intersezioni2, trace.Vertices)){
             poligono2.traccePassanti.push_back(idT);}
         else {poligono2.tracceNonPassanti.push_back(idT);}
         trace.id = idT;
