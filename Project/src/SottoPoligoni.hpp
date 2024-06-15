@@ -3,6 +3,7 @@
 #include "Eigen/Eigen"
 #include <iostream>
 #include <vector>
+#include <deque>
 using namespace Eigen;
 using namespace std;
 
@@ -10,13 +11,15 @@ namespace GeometryLibrary {
 struct SottoPoligoni{
     unsigned int id;
     Matrix3Xd Vertici;
-    vector<unsigned int> Passanti;
-    vector<unsigned int> NonPassanti;
+    unsigned int numVertici;
+    deque<unsigned int> Passanti;
+    deque<unsigned int> NonPassanti;
     map<unsigned int, pair<Vector3d, Vector3d>> estremi; //tutti i punti che fanno la traccia associate anche ai valori
 };
 //prendiamo l elenco delle tracce passanti
-void DividiPoligono(Trace& traccia, Fracture& frattura,list<unsigned int>& Sotto_poligoni, map<unsigned int, Trace>& elenco_traccia);
-void AnalizzaTraccia(Trace& TracciaTaglio, Trace& Traccia, list<unsigned int>& id_sottopoligoni, Vector3d& VettoreEntrante, Fracture& frattura);
+// void PrimoDividiPoligono(Trace& traccia, Fracture& frattura,list<unsigned int>& Sotto_poligoni, vector<Trace>& elenco_traccia);
+void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, list<SottoPoligoni>& Sotto_poligoni, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni);
+void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni& taglio, unsigned int& id_traccia, SottoPoligoni& uscente, SottoPoligoni& entrante, Vector3d& VettoreEntrante, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni);
 
 
 inline unsigned int Regola_Mano_Destra(Vector3d u, Vector3d v, Vector3d controllo_entrante){

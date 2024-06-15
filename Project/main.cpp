@@ -69,32 +69,44 @@ int main()
 
 
 
-    //per la seconda parte
-    //cicliamo sulle fratture
-    list<unsigned int> Sotto_poligoni;
-    for (unsigned int i = 0; i <CollectionFractures.size() ; i++){
+    /* per la seconda parte
+    cicliamo sulle fratture */
+    list<SottoPoligoni> Sotto_poligoni;
+    for (unsigned int i = 0; i < CollectionFractures.size() ; i++){
         map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
         //prima divisione
-        DividiPoligono(elenco_tracce[CollectionFractures[i].traccePassanti[0]], CollectionFractures[i], Sotto_poligoni, elenco_tracce);
-        //iteriamo sulle tracce dei poligoni
-        //Tracce_SottoPoligoni[0]; BHOOOO
-        //Faccio tutte le altre suddivisioni
-        for(unsigned int k = 1; k < fracture.traccePassanti.size() ; k++ ){  //itero su tutte le passanti
-            for(unsigned int j = 0; j < Tracce_SottoPoligoni.size(); j++){
-            DividiPoligono(elenco_tracce[fracture.traccePassanti[k]], Tracce_SottoPoligoni[j], Sotto_poligoni, elenco_tracce);
+        SottoPoligoni primo; //adattiamo la funzione dividi poligono anche per il primo taglio
+        primo.id = 0;
+        primo.Vertici = CollectionFractures[i].Vertici;
+        primo.Passanti = CollectionFractures[i].traccePassanti;
+        primo.NonPassanti = CollectionFractures[i].tracceNonPassanti;
+        primo.numVertici = CollectionFractures[i].numVertici;
+        //manca la mappa di estremi e per poter accedere agli elementi usiamo Trace
+        for(auto iteratore = primo.Passanti.begin(); iteratore != primo.Passanti.end(); iteratore ++){
+            primo.estremi[iteratore] = elenco_tracce[iteratore].Vertices;
+        }
+        for(auto iteratore = primo.NonPassanti.begin(); iteratore != primo.NonPassanti.end(); iteratore ++){
+            primo.estremi[iteratore] = elenco_tracce[iteratore].Vertices;
+        }
+        //dobbiamo aggiungere alla lista dei sottopoligoni primo
+        Sotto_poligoni.push_back(primo);
+        //facciamo una funzione a parte per il primo taglio
 
+
+        //FARE DIVIDIPOLIGONO PER PRIMO
+
+
+
+        for (unsigned int i=0; i<primo.Passanti.size(); i++){
+            for (auto s_pol = Tracce_SottoPoligoni[i].begin(); s_pol != Tracce_SottoPoligoni[i].end(); s_pol++){
+                //flag       NB da passare anche in DividiPoligono
+                DividiPoligono(i, primo, Sotto_poligoni, Tracce_SottoPoligoni);
             }
         }
-        for(unsigned int m = 0; m < fracture.tracceNonPassanti.size(); m++){
-            for(unsigned int y = 0; y < Tracce_SottoPoligoni.size(); y++){
-            DividiPoligono(elenco_tracce[fracture.tracceNonPassanti[m]],Tracce_SottoPoligoni[y], Sotto_poligoni, elenco_tracce);
-        }
-       }
+
 
     }
 
-    // Call the Passante_NonPassante function
-    //auto result = fractures.Passante_NonPassante(outputFile);
 
     // Close the output file stream
     FileTrace.close();

@@ -200,7 +200,6 @@ bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTracc
 
 //typedef Matrix<double, 3, 1> Vector3d;
 bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2) {
-    bool tips;
     Matrix<double,2,3> retta_intersezione = IntersezionePiani(poligono1, poligono2);
 
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
@@ -229,7 +228,6 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
         else {poligono2.tracceNonPassanti.push_back(idT);}
         trace.id = idT;
         return true;
-
     }
 
     return false;
