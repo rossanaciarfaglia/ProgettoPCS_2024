@@ -26,15 +26,14 @@ bool Pto_Retta (Vector3d p, Vector3d v1, Vector3d v2){ //punto, vertice1, vertic
 
 }
 
-//non va bene il metodo della lista
-void DividiPoligono(vector<Trace> traccia, Fracture& frattura){
+void DividiPoligono(Trace traccia, Fracture& frattura, list<unsigned int> Sotto_poligoni, vector<Trace> elenco_tracce){
     //creiamo il sottopoligono 1 (USCENTE) e sottopoligono2 (ENTRANTE)
     SottoPoligoni uscente;
     SottoPoligoni entrante;
     array<unsigned int,2> estremi_entrante;
     //assegnamo 0 al primo di uscente
     //assegnamo 0 e 1 al primo e al secondo di entrante
-    Vector3d start = traccia[frattura.traccePassanti[1]].Vertices.first;
+    Vector3d start = traccia[frattura.traccePassanti[1]].Vertices.first;        //è per questo che serve "estremi"
     Vector3d end = traccia[frattura.traccePassanti[1]].Vertices.second;
     entrante.Vertici.col(0) = start;
     uscente.Vertici.col(0) = start;     uscente.Vertici.col(1) = end;
