@@ -47,6 +47,8 @@ struct Trace{
     double length;
     unsigned int id1;
     unsigned int id2;
+
+    Trace() = default;
 };
 
 /*struct Compare {

@@ -235,12 +235,11 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
 
 
 void OutputSort (vector<unsigned int>& IdTrace, unordered_map<unsigned int, Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
-    unordered_map<unsigned int, double> dizionario;
-    for(unsigned int i = 0; i < IdTrace.size(); i++){
-        dizionario.insert({IdTrace[i], elencoTracce[IdTrace[i]].length});
+    //trasferimento elementi in un vettore di coppie per poter utilizzare sort
+    vector<pair<unsigned int, double>> coppie_traccia;
+    for (unsigned int i=0; i<IdTrace.size();i++){
+        coppie_traccia.push_back({IdTrace[i],elencoTracce[IdTrace[i]].length});
     }
-    //trasferimento elementi del dizionario in un vettore di coppie per poter utilizzare sort
-    vector<pair<unsigned int, double>> coppie_traccia(dizionario.begin(), dizionario.end());
     //ordinamento del vettore (in ordine decrescente)
     sort(coppie_traccia.begin(), coppie_traccia.end(), compare);
     unsigned int count = 0;
