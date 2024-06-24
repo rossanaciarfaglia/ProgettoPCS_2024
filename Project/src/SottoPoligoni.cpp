@@ -46,7 +46,7 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
         cout<<"le due tracce si sovrappongono"<<endl;
         return;}
 
-    bool trovato = false; //analizza se troviamo l'id in tracce passanti o non passanti della frattura grande
+    bool trovato = false; //analizza se troviamo l'id in tracce passanti della frattura grande (altrimenti è in non passanti)
     for (int i = 0; i < taglio.Passanti.size(); i++) {
         if (taglio.Passanti[i] == id_traccia)
             trovato = true;
@@ -73,8 +73,8 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
 
 
     case 1:
-        //le tracce si intersecano
-        //quindi dobbiamo trovare l'intersezione
+        /*Le tracce si intersecano, quindi dobbiamo trovare l'intersezione
+        In questo caso allo stesso id_traccia saranno associate due tracce "diverse" a seconda che sono in uscente o entrante (NON nello stesso) */
         Vector2d solution = ParametriRetta(start, end, start_taglio, end_taglio-start_taglio);
         Vector3d intersezione = start + solution[0]*(end - start); //abbiamo trovato l'intersezione
         if (trovato){
@@ -101,8 +101,8 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
             //se il prodotto vettoriale tra i lati del sottopoligono e il vettore dato dalla distanza tra uno dei punti tra start ed end e uno dei vertici del lato
             //è 0 --> start o end (a seconda di quello scelto) appartiene al poligono
             for(unsigned int i = 0; i < uscente.numVertici; i++){ //qui vedo se è passante per il sottopoligono uscente
-                if (Regola_Mano_Destra(uscente.Vertici.col((i+1)%uscente.numVertici)-uscente.Vertici.col(i),start-uscente.Vertici.col(i),uscente.Vertici.col((i+1)%uscente.numVertici)-uscente.Vertici.col(i)) == 2 ||
-                    Regola_Mano_Destra(uscente.Vertici.col((i+1)%uscente.numVertici)-uscente.Vertici.col(i),end-uscente.Vertici.col(i),uscente.Vertici.col((i+1)%uscente.numVertici)-uscente.Vertici.col(i)) == 2){
+                if (Regola_Mano_Destra(uscente.Vertici.col((i+1)%uscente.numVertici)-uscente.Vertici.col(i), start-uscente.Vertici.col(i), VettoreEntrante) == 2 ||
+                    Regola_Mano_Destra(uscente.Vertici.col((i+1)%uscente.numVertici)-uscente.Vertici.col(i), end-uscente.Vertici.col(i), VettoreEntrante) == 2){
                     if ((uscente.estremi[id_traccia].first - start).norm() <= 1e-14){
                         //significa che lo start sta in uscente
                         uscente.estremi[id_traccia].second = intersezione;
@@ -164,66 +164,23 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
 }
 
 
-// void PrimoDividiPoligono(Trace traccia, Fracture& frattura, list<unsigned int>& Sotto_poligoni, vector<Trace> elenco_tracce){
-//     //creiamo il sottopoligono 1 (USCENTE) e sottopoligono2 (ENTRANTE)
-//     SottoPoligoni uscente;
-//     SottoPoligoni entrante;
-//     array<unsigned int,2> estremi_entrante;
-//     //assegnamo 0 al primo di uscente
-//     //assegnamo 0 e 1 al primo e al secondo di entrante
-//     Vector3d start = traccia.Vertices.first;        //è per questo che serve "estremi"
-//     Vector3d end = traccia[frattura.traccePassanti[1]].Vertices.second;
-//     entrante.Vertici.col(0) = start;
-//     uscente.Vertici.col(0) = start;     uscente.Vertici.col(1) = end;
 
-//     //iteriamo sui vertici dei poligoni
-//     for (unsigned int i=0; i < frattura.numVertici; i++){
-//         Vector2d parametri = ParametriRetta(frattura.Vertici.col(i),frattura.Vertici.col((i+1)%frattura.numVertici), start, end-start);
-//         if (parametri[0] >= 0 && parametri[0] <= 1 && parametri[1] >= 0 && parametri[1] <= 1) { //controlliamo che c'è l'intersezione in quel lato
-//             //se è lo start
-//             if(Pto_Retta(start, frattura.Vertici.col(i), frattura.Vertici.col((i+1)%frattura.numVertici))){
-//                 estremi_entrante[0] = (i+1)%frattura.numVertici; //prendo il più grande
-//             }
-//             else{estremi_entrante[1] = i; //prendo il più piccolo
-//             }
-//         }
-//     }
-
-//     unsigned int numVEntr = ((estremi_entrante[1]-estremi_entrante[0]+frattura.numVertici)%frattura.numVertici)+1;  //sono i vertici all'infuori dei due nuovi
-//     for (unsigned int e=0; e<numVEntr; e++){
-//         entrante.Vertici.col(e+1) = frattura.Vertici.col((estremi_entrante[0]+e)%frattura.numVertici);
-//     }
-//     entrante.Vertici.col(numVEntr+1) = end;
-//     entrante.numVertici = numVEntr + 2;
-//     for (unsigned int u=0; u < frattura.numVertici-numVEntr; u++){
-//         uscente.Vertici.col(u+2) = frattura.Vertici.col((estremi_entrante[1]+1+u)%frattura.numVertici);
-//     }
-//     uscente.numVertici = frattura.numVertici-numVEntr + 2;
-
-//     //stabilinamo una direzione rispetto alla quale definiremo la regola della mano desctra restituisce un vettore uscente o entrante(positivo sarà uscente, negativo entrante)
-//     Vector3d Direzione_Entrante = uscente.Vertici.col(1) - start;
-
-//     for(unsigned int k = 1; k < frattura.traccePassanti.size() ; k++ ){  //itero su tutte le passanti
-//         AnalizzaTraccia(elenco_tracce[frattura.traccePassanti[1]], elenco_tracce[frattura.traccePassanti[k]], uscente, entrante, Direzione_Entrante, frattura); //struttura trace delle tracce che corrispondono a questo id
-//     }
-
-// }
-
-
-
-void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, list<SottoPoligoni>& Sotto_poligoni, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni){
+void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, map<unsigned int, SottoPoligoni>& Sotto_poligoni, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni, const string& flag, unsigned int& idSP){
     //creiamo il sottopoligono 1 (USCENTE) e sottopoligono2 (ENTRANTE)
     SottoPoligoni uscente;
     SottoPoligoni entrante;
     Vector3d start;
     Vector3d end;
-    if (flag= passante){
+    if (flag == "passante"){
         start = frattura.estremi[id_tr].first;
         end = frattura.estremi[id_tr].second;
     }
     else{
         //allunga traccia
         // start ed end sono i punti di intersezione
+
+
+        //con intersection point e isless
     }
     array<unsigned int,2> estremi_entrante;
     //assegnamo 0 al primo di uscente
@@ -255,17 +212,19 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, list<SottoPoli
     }
     uscente.numVertici = frattura.numVertici-numVEntr + 2;
 
-    //stabilinamo una direzione rispetto alla quale definiremo la regola della mano destra restituisce un vettore uscente o entrante(positivo sarà uscente, negativo entrante)
-    Vector3d Direzione_Entrante = uscente.Vertici.col(1) - start;
+    //stabilinamo una direzione rispetto alla quale definiremo la regola della mano destra restituisce un vettore uscente o entrante(positivo sarà entrante, negativo uscente)
+    Vector3d Direzione_Entrante = entrante.Vertici.col(1) - start;
 
-    for(unsigned int k = 0; k < frattura.estremi.size() ; k++ ){  //itero su tutte le tracce
+    for(unsigned int k = 0; k < frattura.estremi.size() ; k++){  //itero su tutte le tracce
         if(k == id_tr){
-            break; }
+            continue; }
         AnalizzaTraccia(start, end, frattura, k, uscente, entrante, Direzione_Entrante, Tracce_SottoPoligoni); //struttura trace delle tracce che corrispondono a questo id
     }
-    Sotto_poligoni.push_back(uscente);
-    Sotto_poligoni.push_back(entrante);
-    Sotto_poligoni.pop_front();
+    idSP ++;
+    Sotto_poligoni.insert({idSP, uscente});
+    idSP ++;
+    Sotto_poligoni.insert({idSP, entrante});
+    Sotto_poligoni.erase(Sotto_poligoni.begin());
 }
 
 }

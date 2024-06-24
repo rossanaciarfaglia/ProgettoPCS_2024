@@ -44,7 +44,7 @@ bool IntersezioneSfere(Fracture& polygon1, Fracture& polygon2);
 struct Trace{
     unsigned int id;
     pair<Vector3d, Vector3d> Vertices;
-    double lenght;
+    double length;
     unsigned int id1;
     unsigned int id2;
 };
@@ -95,7 +95,7 @@ void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_m
 inline bool compare(const pair<unsigned int, double>& coppia1, const pair<unsigned int, double>& coppia2){
     return coppia1.second > coppia2.second;
 }
-void OutputSort(vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
+void OutputSort(vector<unsigned int>& IdTrace, unordered_map<unsigned int, Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
 }
 
 #endif

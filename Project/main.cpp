@@ -26,7 +26,7 @@ int main()
     }
 
     unsigned int idT = 0;
-    vector<Trace> elenco_tracce;
+    unordered_map<unsigned int, Trace> elenco_tracce;
     unsigned int n_key = CollectionFractures.size();
     for (unsigned int idF1 = 0; idF1 < n_key; idF1++){
         for(unsigned int idF2 = (idF1+1); idF2<n_key;idF2++){
@@ -35,7 +35,7 @@ int main()
                 if(Find_Trace(trace, idT, CollectionFractures[idF1], CollectionFractures[idF2])){
                     trace.id1 = idF1;
                     trace.id2 = idF2;
-                elenco_tracce.push_back(trace);
+                elenco_tracce[idT] = trace;
                 idT += 1;}
             }
         }
@@ -56,8 +56,8 @@ int main()
     }
     for(unsigned int numFratture = 0; numFratture < n_key; numFratture ++){
         FileFracture << "#FractureId; NumTraces" << endl;
-        //contiamo il numero delle tracce associate alla frattura
-        //accediamo alla struttura Fratture e alle mappe di passanti e non passanti
+        /* contiamo il numero delle tracce associate alla frattura
+        accediamo alla struttura Fratture e alle mappe di passanti e non passanti */
         FileFracture << numFratture << " " << CollectionFractures[numFratture].traccePassanti.size() + CollectionFractures[numFratture].tracceNonPassanti.size() << endl;
         FileFracture << "#TraceId; Tips; Length" << endl;
         //vediamo se sta in passanti o non passanti
@@ -67,11 +67,25 @@ int main()
         OutputSort(CollectionFractures[numFratture].tracceNonPassanti, elenco_tracce, FileFracture, tips);
     }
 
+    // Matrix3Xd matrice = (MatrixXd(3,4) << 3,2,2,3,
+    //                      2.6,2.6,2.6,2.6,
+    //                      1,1,2,2).finished();
+    // Vector3d vettore = {1,1,1};
+    // VectorXd risult = matrice.col(1)-vettore;
+    // for(auto& i:risult){
+    //     cout << i << endl;
+    // }
 
 
+
+
+
+    // !MODO 1!
     /* per la seconda parte
     cicliamo sulle fratture */
-    list<SottoPoligoni> Sotto_poligoni;
+    map<unsigned int, SottoPoligoni> Sotto_poligoni2;
+    unsigned int idSP = 0;
+
     for (unsigned int i = 0; i < CollectionFractures.size() ; i++){
         map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
         //prima divisione
@@ -82,30 +96,78 @@ int main()
         primo.NonPassanti = CollectionFractures[i].tracceNonPassanti;
         primo.numVertici = CollectionFractures[i].numVertici;
         //manca la mappa di estremi e per poter accedere agli elementi usiamo Trace
-        for(auto iteratore = primo.Passanti.begin(); iteratore != primo.Passanti.end(); iteratore ++){
-            primo.estremi[iteratore] = elenco_tracce[iteratore].Vertices;
-        }
-        for(auto iteratore = primo.NonPassanti.begin(); iteratore != primo.NonPassanti.end(); iteratore ++){
-            primo.estremi[iteratore] = elenco_tracce[iteratore].Vertices;
-        }
-        //dobbiamo aggiungere alla lista dei sottopoligoni primo
-        Sotto_poligoni.push_back(primo);
-        //facciamo una funzione a parte per il primo taglio
+        cout << "xd " << primo.Passanti.size() << endl;
 
+        for(unsigned int i = 0; i < primo.Passanti.size(); i++){
+            primo.estremi.insert({primo.Passanti[i], elenco_tracce[primo.Passanti.at(i)].Vertices});
+        }
+        for(unsigned int i = 0; i < primo.NonPassanti.size(); i++){
+            primo.estremi.insert({primo.NonPassanti[i], elenco_tracce[primo.NonPassanti.at(i)].Vertices});
+        }
+
+        Sotto_poligoni2.insert({idSP, primo});    //aggiungiamo alla lista dei sottopoligoni primo
+
+        string flag_p = "passanti";
+        string flag_np = "nonpassanti";
 
         //FARE DIVIDIPOLIGONO PER PRIMO
+        DividiPoligono(primo.Passanti[0], primo, Sotto_poligoni2, Tracce_SottoPoligoni, flag_p, idSP);
 
-
-
-        for (unsigned int i=0; i<primo.Passanti.size(); i++){
-            for (auto s_pol = Tracce_SottoPoligoni[i].begin(); s_pol != Tracce_SottoPoligoni[i].end(); s_pol++){
-                //flag       NB da passare anche in DividiPoligono
-                DividiPoligono(i, primo, Sotto_poligoni, Tracce_SottoPoligoni);
+        for (unsigned int i=1; i<primo.Passanti.size(); i++){
+            for (auto& id_sott : Tracce_SottoPoligoni[primo.Passanti[i]]){
+                DividiPoligono(i, Sotto_poligoni2[id_sott], Sotto_poligoni2, Tracce_SottoPoligoni, flag_p, idSP);
+            }
+        }
+        for (unsigned int i=0; i<primo.NonPassanti.size(); i++){
+            for (auto& id_sott : Tracce_SottoPoligoni[primo.NonPassanti[i]]){
+                DividiPoligono(i, Sotto_poligoni2[id_sott], Sotto_poligoni2, Tracce_SottoPoligoni, flag_np, idSP);
             }
         }
 
-
     }
+
+
+    // // !MODO 2!
+    // /* per la seconda parte
+    // cicliamo sulle fratture */
+    // list<SottoPoligoni> Sotto_poligoni;
+    // map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
+
+    // for (unsigned int i = 0; i < CollectionFractures.size() ; i++){
+    //     //prima divisione
+    //     SottoPoligoni primo; //adattiamo la funzione dividi poligono anche per il primo taglio
+    //     primo.id = 0;
+    //     primo.Vertici = CollectionFractures[i].Vertici;
+    //     primo.Passanti = CollectionFractures[i].traccePassanti;
+    //     primo.NonPassanti = CollectionFractures[i].tracceNonPassanti;
+    //     primo.numVertici = CollectionFractures[i].numVertici;
+    //     //manca la mappa di estremi e per poter accedere agli elementi usiamo Trace
+    //     for(unsigned int i = 0; i < primo.Passanti.size(); i++){
+    //         primo.estremi.insert({primo.Passanti[i], elenco_tracce[primo.Passanti.at(i)].Vertices});
+    //     }
+    //     for(unsigned int i = 0; i < primo.NonPassanti.size(); i++){
+    //         primo.estremi.insert({primo.NonPassanti[i], elenco_tracce[primo.Passanti.at(i)].Vertices});
+    //     }
+
+    //     Sotto_poligoni.push_back(primo);    //aggiungiamo alla lista dei sottopoligoni primo
+    // }
+
+    // string flag_p = "passanti";
+    // string flag_np = "nonpassanti";
+    // for (SottoPoligoni sott = Sotto_poligoni.begin(); sott != Sotto_poligoni.end(); sott++){
+    //     if(!sott.Passanti.empty()){
+    //         DividiPoligono(sott.Passanti[0], sott, Sotto_poligoni, Tracce_SottoPoligoni, flag_p);
+    //     }
+    //     else if (!sott.NonPassanti.empty()){
+    //         DividiPoligono(sott.NonPassanti[0], sott, Sotto_poligoni, Tracce_SottoPoligoni, flag_np);
+    //     }
+    //     else {
+    //         // Non ha più tracce -> lo salvo nella mesh
+    //     }
+    // }
+
+
+
 
 
     // Close the output file stream

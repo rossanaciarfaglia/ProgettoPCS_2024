@@ -218,7 +218,7 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
     pair<Vector3d, Vector3d> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione);
     if(tr.first != Vector3d::Zero() && tr.second != Vector3d::Zero()){
         trace.Vertices = tr;
-        trace.lenght = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
+        trace.length = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
         if(Tips(intersezioni1, trace.Vertices))
         {poligono1.traccePassanti.push_back(idT);}
         else {poligono1.tracceNonPassanti.push_back(idT);}
@@ -234,10 +234,10 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
 }
 
 
-void OutputSort (vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
+void OutputSort (vector<unsigned int>& IdTrace, unordered_map<unsigned int, Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
     unordered_map<unsigned int, double> dizionario;
     for(unsigned int i = 0; i < IdTrace.size(); i++){
-        dizionario.insert({IdTrace[i], elencoTracce[IdTrace[i]].lenght});
+        dizionario.insert({IdTrace[i], elencoTracce[IdTrace[i]].length});
     }
     //trasferimento elementi del dizionario in un vettore di coppie per poter utilizzare sort
     vector<pair<unsigned int, double>> coppie_traccia(dizionario.begin(), dizionario.end());
