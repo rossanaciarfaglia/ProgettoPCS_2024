@@ -241,11 +241,11 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, map<unsigned i
         AnalizzaTraccia(start, end, frattura, k, uscente, entrante, Direzione_Entrante, Tracce_SottoPoligoni); //struttura trace delle tracce che corrispondono a questo id
     }
     idV++;
+    Sotto_poligoni.erase(idSP);
     idSP ++;
     Sotto_poligoni.insert({idSP, uscente});
     idSP ++;
     Sotto_poligoni.insert({idSP, entrante});
-    Sotto_poligoni.erase(Sotto_poligoni.begin());
 }
 
 }
