@@ -29,7 +29,7 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
 inline unsigned int Regola_Mano_Destra(Vector3d u, Vector3d v, Vector3d controllo_entrante){
     //ora effettuo il prodotto scalare tra il vettore che ho stabilito entrante e il vettore che viene dal prodotto vettoriale
     //se è negativo allora la direzione del vettore considerato è opposta a quello dato, per cui il vettore risulta uscente
-    double prodotto_scalare = (u[1]*v[2]-v[1]*u[2])*controllo_entrante[0] +(v[0]*u[2]-u[0]*v[2])*controllo_entrante[1] + (u[0]*v[1]-v[0]*u[1])*controllo_entrante[2];
+    double prodotto_scalare = (u[1]*v[2]-v[1]*u[2])*controllo_entrante[0] + (v[0]*u[2]-u[0]*v[2])*controllo_entrante[1] + (u[0]*v[1]-v[0]*u[1])*controllo_entrante[2];
     if(prodotto_scalare < 0)      // return 0 corrisponde a entrante, return 1 uscente, return 2 a = 0
         return 1; //uscente
     else if(prodotto_scalare > 0)

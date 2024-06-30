@@ -10,8 +10,7 @@ using namespace std;
 using namespace GeometryLibrary;
 
 
-int main()
-{
+int main() {
     bool tips;
     string filepath = "./DFN/FR3_data.txt";
     Fracture fracture;
@@ -75,11 +74,8 @@ int main()
     map<unsigned int, SottoPoligoni> Sotto_poligoni;
     unsigned int idSP = 0;
     unsigned int idV = 0;
-    for (unsigned int idP; idP < n_key; idP++){
-        if(CollectionFractures[idP].traccePassanti.empty() && CollectionFractures[idP].tracceNonPassanti.empty()){
-            continue;
-        }
-        map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
+    map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
+    for (unsigned int idP=0; idP < CollectionFractures.size(); idP++){
         //prima divisione
         SottoPoligoni primo; //adattiamo la funzione dividi poligono anche per il primo taglio
         primo.id = 0;
@@ -173,6 +169,7 @@ int main()
     unsigned int idL = 0;
     for(auto it : Sotto_poligoni){
         cout << "sottopoligono " << it.first << endl;
+        cout << "numV: " << it.second.numVertici << endl;
         for (unsigned int i=0; i<it.second.numVertici; i++){
             mesh.IdCell0D.push_back(it.second.Vertici[i].first);
             mesh.CoordinatesCell0D.push_back(it.second.Vertici[i].second);

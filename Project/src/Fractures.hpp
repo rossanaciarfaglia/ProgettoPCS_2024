@@ -62,7 +62,7 @@ struct Trace{
 Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2);
 
 
-inline Vector2d ParametriRetta (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
+inline Vector2d CoefficientiRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
     Vector2d solution;
     MatrixXd A(3,2);
     A.col(0) = (P1 - P0); // Colonna per il parametro t

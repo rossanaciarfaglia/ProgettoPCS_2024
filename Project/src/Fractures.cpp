@@ -121,7 +121,7 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, Matrix3Xd& vert
     intersezioni.reserve(2);
     Vector2d system_solution;
     for(unsigned int c = 0; c < numVert; c++){
-        system_solution = ParametriRetta(vertici.col(c), vertici.col((c+1)%numVert), retta.row(0), retta.row(1));
+        system_solution = CoefficientiRette(vertici.col(c), vertici.col((c+1)%numVert), retta.row(0), retta.row(1));
 
         if (system_solution[0] >= 0 && system_solution[0] <= 1) {   // Questo è il segmento
             // Calcola le coordinate del punto di intersezione

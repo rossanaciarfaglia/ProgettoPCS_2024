@@ -162,7 +162,7 @@ TEST(IntersectionsTests, TestIntersezionePiani){
 }
 
 
-TEST(IntersectionsTests, TestParametriRetta_1){
+TEST(IntersectionsTests, TestCoefficientiRette_1){
     Vector3d P0 = {3,2,1};
     Vector3d P1 = {3,1,1};
     Vector3d P2 = {2,1,1};
@@ -170,11 +170,11 @@ TEST(IntersectionsTests, TestParametriRetta_1){
     Vector3d Q = {0,2.6,1};
     Vector3d coeff_retta = {1,0,0};
 
-    Vector2d result_01 = ParametriRetta(P0,P1,Q,coeff_retta);
+    Vector2d result_01 = CoefficientiRette(P0,P1,Q,coeff_retta);
     Vector2d expectedres_01 = {-0.6,3};
-    Vector2d result_12 = ParametriRetta(P1,P2,Q,coeff_retta);
+    Vector2d result_12 = CoefficientiRette(P1,P2,Q,coeff_retta);
     Vector2d expectedres_12 = {-1,-1};
-    Vector2d result_20 = ParametriRetta(P2,P0,Q,coeff_retta);
+    Vector2d result_20 = CoefficientiRette(P2,P0,Q,coeff_retta);
     Vector2d expectedres_20 = {1.6,3.6};
 
     for (unsigned int i=0; i<2; i++){
