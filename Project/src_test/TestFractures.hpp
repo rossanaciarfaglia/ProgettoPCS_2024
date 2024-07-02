@@ -110,6 +110,40 @@ TEST(PolygonsTest, TestTrovaPiano_3){
 }
 
 
+TEST(GeneralFunctions, TestProdottoVettoriale_1){
+    Vector3d e1 = {1,0,0};
+    Vector3d e2 = {0,1,0};
+    Vector3d result = ProdottoVettoriale(e1,e2);
+    Vector3d expected_res = {0,0,1};
+
+    for (unsigned int i=0; i<3; i++){
+        EXPECT_NEAR(result[i], expected_res[i], 1e-14);
+    }
+}
+
+TEST(GeneralFunctions, TestProdottoVettoriale_2){
+    Vector3d e1 = {2,0,0};
+    Vector3d e2 = {0,3,0};
+    Vector3d result = ProdottoVettoriale(e1,e2);
+    Vector3d expected_res = {0,0,6};
+
+    for (unsigned int i=0; i<3; i++){
+        EXPECT_NEAR(result[i], expected_res[i], 1e-14);
+    }
+}
+
+TEST(GeneralFunctions, TestProdottoVettoriale_3){
+    Vector3d e1 = {1,0,0};
+    Vector3d e2 = {0,1,0};
+    Vector3d result = ProdottoVettoriale(e2,e1);
+    Vector3d expected_res = {0,0,-1};
+
+    for (unsigned int i=0; i<3; i++){
+        EXPECT_NEAR(result[i], expected_res[i], 1e-14);
+    }
+}
+
+
 TEST(IntersectionsTests, TestIntersezioneSfere){
     unsigned int t = 3;
     unsigned int q = 4;

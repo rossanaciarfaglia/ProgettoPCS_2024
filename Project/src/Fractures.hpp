@@ -38,6 +38,18 @@ inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
     return distanza;
 }
 
+inline Vector3d ProdottoVettoriale(VectorXd u, VectorXd v){
+    if (u.size() < 3 || v.size() < 3){
+        cerr << "prodotto vettoriale tra vettori di dimensione minore di 3" << endl;
+    }
+
+    Vector3d prod_vett;
+    prod_vett[0] = u[1]*v[2] - u[2]*v[1];
+    prod_vett[1] = u[2]*v[0] - u[0]*v[2];
+    prod_vett[2] = u[0]*v[1] - u[1]*v[0];
+    return prod_vett;
+}
+
 bool IntersezioneSfere(Fracture& polygon1, Fracture& polygon2);
 
 
