@@ -56,11 +56,9 @@ Vector4d Fracture::TrovaPiano(Matrix3Xd &poligono){
     }
 
     Vector4d piano;   // è il vettore normale n + la costante d
-    piano[0] = (u[1]*v[2]-v[1]*u[2]);
-    piano[1] = (v[0]*u[2]-u[0]*v[2]);
-    piano[2] = (u[0]*v[1]-v[0]*u[1]);
-
+    piano << ProdottoVettoriale(u,v), 0;
     piano[3] = piano[0]*poligono(0,0) + piano[1]*poligono(1,0) + piano[2]*poligono(2,0);
+    cout << "piano: " << piano[0] << " " << piano[1] << " " << piano[2] << " " << piano[3] << " " << endl;
 
     return piano;
 }
@@ -85,10 +83,7 @@ Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2) {
 
     Vector4d n1 = polygon1.TrovaPiano(polygon1.Vertici);
     Vector4d n2 = polygon2.TrovaPiano(polygon2.Vertici);
-    Vector3d t;
-    t[0] = n1[1]*n2[2]-n1[2]*n2[1];
-    t[1] = n1[2]*n2[0]-n1[0]*n2[2];
-    t[2] = n1[0]*n2[1]-n1[1]*n2[0];
+    Vector3d t = ProdottoVettoriale(n1,n2);
 
     if(t.norm() != 0) {
     // Non sono paralleli o complanari
@@ -121,7 +116,7 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, Matrix3Xd& vert
     intersezioni.reserve(2);
     Vector2d system_solution;
     for(unsigned int c = 0; c < numVert; c++){
-        system_solution = ParametriRetta(vertici.col(c), vertici.col((c+1)%numVert), retta.row(0), retta.row(1));
+        system_solution = CoefficientiRette(vertici.col(c), vertici.col((c+1)%numVert), retta.row(0), retta.row(1));
 
         if (system_solution[0] >= 0 && system_solution[0] <= 1) {   // Questo è il segmento
             // Calcola le coordinate del punto di intersezione

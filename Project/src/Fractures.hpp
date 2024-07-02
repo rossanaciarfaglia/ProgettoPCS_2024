@@ -38,6 +38,18 @@ inline double DistanzaEuclidea(Vector3d &centro1, Vector3d &centro2) {
     return distanza;
 }
 
+inline Vector3d ProdottoVettoriale(VectorXd u, VectorXd v){
+    if (u.size() < 3 || v.size() < 3){
+        cerr << "prodotto vettoriale tra vettori di dimensione minore di 3" << endl;
+    }
+
+    Vector3d prod_vett;
+    prod_vett[0] = u[1]*v[2] - u[2]*v[1];
+    prod_vett[1] = u[2]*v[0] - u[0]*v[2];
+    prod_vett[2] = u[0]*v[1] - u[1]*v[0];
+    return prod_vett;
+}
+
 bool IntersezioneSfere(Fracture& polygon1, Fracture& polygon2);
 
 
@@ -62,7 +74,7 @@ struct Trace{
 Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2);
 
 
-inline Vector2d ParametriRetta (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
+inline Vector2d CoefficientiRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
     Vector2d solution;
     MatrixXd A(3,2);
     A.col(0) = (P1 - P0); // Colonna per il parametro t

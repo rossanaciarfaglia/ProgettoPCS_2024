@@ -8,10 +8,10 @@
 
 using namespace std;
 using namespace GeometryLibrary;
+using namespace PolygonalLibrary;
 
 
-int main()
-{
+int main() {
     bool tips;
     string filepath = "./DFN/FR3_data.txt";
     Fracture fracture;
@@ -36,8 +36,9 @@ int main()
                 if(Find_Trace(trace, idT, CollectionFractures[idF1], CollectionFractures[idF2])){
                     trace.id1 = idF1;
                     trace.id2 = idF2;
-                elenco_tracce[idT] = trace;
-                idT += 1;}
+                    elenco_tracce[idT] = trace;
+                    idT += 1;
+                }
             }
         }
     }
@@ -72,19 +73,22 @@ int main()
 
     /* per la seconda parte
     cicliamo sulle fratture */
+    PolygonalMesh mesh;
+
     map<unsigned int, SottoPoligoni> Sotto_poligoni;
     unsigned int idSP = 0;
     unsigned int idV = 0;
-    for (unsigned int idP; idP < n_key; idP++){
-        if(CollectionFractures[idP].traccePassanti.empty() && CollectionFractures[idP].tracceNonPassanti.empty()){
-            continue;
-        }
-        map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
+    map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
+    for (unsigned int idP=0; idP < CollectionFractures.size(); idP++){
         //prima divisione
         SottoPoligoni primo; //adattiamo la funzione dividi poligono anche per il primo taglio
+        // ConvertitoreStructFratt(SottoPoligoni primo, unordered_map<unsigned int, Fracture> CollectionFractures, map<unsigned int, SottoPoligoni> Sotto_poligoni, unsigned int idP, unsigned int idSP, unsigned int idV)
         primo.id = 0;
         for (unsigned int v=0; v<CollectionFractures[idP].numVertici; v++){
             primo.Vertici.push_back({idV, CollectionFractures[idP].Vertici.col(v)});
+            mesh.IdCell0D.push_back(idV);
+            mesh.CoordinatesCell0D.push_back(CollectionFractures[idP].Vertici.col(v));
+            // Add_Vert_to_Mesh(mesh, idV, CollectionFractures[idP].Vertici.col(v));
             idV++;
         }
         primo.Passanti = CollectionFractures[idP].traccePassanti;
@@ -99,29 +103,40 @@ int main()
         }
         Sotto_poligoni.insert({idSP, primo});    //aggiungiamo alla lista dei sottopoligoni primo
 
+
         string flag_p = "passanti";
         string flag_np = "nonpassanti";
 
         if (primo.Passanti.size() != 0){
-            DividiPoligono(primo.Passanti[0], primo, Sotto_poligoni, Tracce_SottoPoligoni, flag_p, idSP, idV);     //DividiPoligono per la prima frattura
+            cout << "ex sottopol: " << idSP << endl << "numV: " << primo.numVertici << endl;
+            for (unsigned int h =0; h<primo.numVertici; h++){
+                cout << primo.Vertici[h].first << " ";
+            }
+            cout << endl;
+            DividiPoligono(primo.Passanti[0], primo, idSP, Sotto_poligoni, Tracce_SottoPoligoni, flag_p, idSP, idV, mesh);     //DividiPoligono per la prima frattura
 
             for (unsigned int j=1; j<primo.Passanti.size(); j++){
                 for (auto& id_sott : Tracce_SottoPoligoni[primo.Passanti[j]]){
-                    DividiPoligono(j, Sotto_poligoni[id_sott], Sotto_poligoni, Tracce_SottoPoligoni, flag_p, idSP, idV);
+                    DividiPoligono(primo.Passanti[j], Sotto_poligoni[id_sott], id_sott, Sotto_poligoni, Tracce_SottoPoligoni, flag_p, idSP, idV, mesh);
                 }
             }
             for (unsigned int k=0; k<primo.NonPassanti.size(); k++){
                 for (auto& id_sott : Tracce_SottoPoligoni[primo.NonPassanti[k]]){
-                    DividiPoligono(k, Sotto_poligoni[id_sott], Sotto_poligoni, Tracce_SottoPoligoni, flag_np, idSP, idV);
+                    DividiPoligono(primo.NonPassanti[k], Sotto_poligoni[id_sott], id_sott, Sotto_poligoni, Tracce_SottoPoligoni, flag_np, idSP, idV, mesh);
                 }
             }
         }
         else {
-            DividiPoligono(primo.NonPassanti[0], primo, Sotto_poligoni, Tracce_SottoPoligoni, flag_np, idSP, idV);       //DividiPoligono per la prima frattura
+            cout << "ex sottopol: " << idSP << endl << "numV: " << primo.numVertici << endl;
+            for (unsigned int h =0; h<primo.numVertici; h++){
+                cout << primo.Vertici[h].first << " ";
+            }
+            cout << endl;
+            DividiPoligono(primo.NonPassanti[0], primo, idSP, Sotto_poligoni, Tracce_SottoPoligoni, flag_np, idSP, idV, mesh);       //DividiPoligono per la prima frattura
 
             for (unsigned int k=1; k<primo.NonPassanti.size(); k++){
                 for (auto& id_sott : Tracce_SottoPoligoni[primo.NonPassanti[k]]){
-                    DividiPoligono(k, Sotto_poligoni[id_sott], Sotto_poligoni, Tracce_SottoPoligoni, flag_np, idSP, idV);
+                    DividiPoligono(primo.NonPassanti[k], Sotto_poligoni[id_sott], id_sott, Sotto_poligoni, Tracce_SottoPoligoni, flag_np, idSP, idV, mesh);
                 }
             }
         }
@@ -129,61 +144,30 @@ int main()
     cout << "!" << endl;
 
 
-    // // !MODO 2!
-    // /* per la seconda parte
-    // cicliamo sulle fratture */
-    // list<SottoPoligoni> Sotto_poligoni;
-    // map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
+    // PolygonalMesh mesh;
+    // unsigned int idL = 0;
+    // for(auto it : Sotto_poligoni){
+    //     cout << "sottopoligono " << it.first << endl;
+    //     cout << "numV: " << it.second.numVertici << endl;
+    //     for (unsigned int i=0; i<it.second.numVertici; i++){
+    //         mesh.IdCell0D.push_back(it.second.Vertici[i].first);
+    //         mesh.CoordinatesCell0D.push_back(it.second.Vertici[i].second);
 
-    // for (unsigned int i = 0; i < CollectionFractures.size() ; i++){
-    //     //prima divisione
-    //     SottoPoligoni primo; //adattiamo la funzione dividi poligono anche per il primo taglio
-    //     primo.id = 0;
-    //     primo.Vertici = CollectionFractures[i].Vertici;
-    //     primo.Passanti = CollectionFractures[i].traccePassanti;
-    //     primo.NonPassanti = CollectionFractures[i].tracceNonPassanti;
-    //     primo.numVertici = CollectionFractures[i].numVertici;
-    //     //manca la mappa di estremi e per poter accedere agli elementi usiamo Trace
-    //     for(unsigned int i = 0; i < primo.Passanti.size(); i++){
-    //         primo.estremi.insert({primo.Passanti[i], elenco_tracce[primo.Passanti[i].Vertices});
+    //         mesh.IdCell1D.push_back(idL);
+    //         mesh.VerticesCell1D.push_back({it.second.Vertici[i].first, it.second.Vertici[(i+1)%(it.second.numVertici)].first});
+    //         idL++;
+    //         cout << mesh.VerticesCell1D[i][0] << "    " << mesh.VerticesCell1D[i][1] << endl;
     //     }
-    //     for(unsigned int i = 0; i < primo.NonPassanti.size(); i++){
-    //         primo.estremi.insert({primo.NonPassanti[i], elenco_tracce[primo.Passanti[i].Vertices});
-    //     }
-
-    //     Sotto_poligoni.push_back(primo);    //aggiungiamo alla lista dei sottopoligoni primo
+    //     cout << endl;
     // }
 
-    // string flag_p = "passanti";
-    // string flag_np = "nonpassanti";
-    // for (SottoPoligoni sott = Sotto_poligoni.begin(); sott != Sotto_poligoni.end(); sott++){
-    //     if(!sott.Passanti.empty()){
-    //         DividiPoligono(sott.Passanti[0], sott, Sotto_poligoni, Tracce_SottoPoligoni, flag_p);
-    //     }
-    //     else if (!sott.NonPassanti.empty()){
-    //         DividiPoligono(sott.NonPassanti[0], sott, Sotto_poligoni, Tracce_SottoPoligoni, flag_np);
-    //     }
-    //     else {
-    //         // Non ha più tracce -> lo salvo nella mesh
-    //     }
-    // }
-
-
-    PolygonalLibrary::PolygonalMesh mesh;
-    unsigned int idL = 0;
-    for(auto it : Sotto_poligoni){
-        cout << "sottopoligono " << it.first << endl;
-        for (unsigned int i=0; i<it.second.numVertici; i++){
-            mesh.IdCell0D.push_back(it.second.Vertici[i].first);
-            mesh.CoordinatesCell0D.push_back(it.second.Vertici[i].second);
-
-            mesh.IdCell1D.push_back(idL);
-            mesh.VerticesCell1D.push_back({it.second.Vertici[i].first, it.second.Vertici[(i+1)%(it.second.numVertici)].first});
-            idL++;
-            cout << mesh.VerticesCell1D[i][0] << "    " << mesh.VerticesCell1D[i][1] << endl;
-        }
-        cout << endl;
+    cout << "IdCell0D:  ";
+    for (unsigned int i=0; i<mesh.IdCell0D.size(); i++){
+        cout << mesh.IdCell0D[i] << " ";
     }
+    cout << endl;
+
+
 
 
     // Close the output file stream

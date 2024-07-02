@@ -13,7 +13,7 @@ struct PolygonalMesh {
     vector<unsigned int> IdCell0D;     // tutti gli id dei vertici
     vector<Vector3d> CoordinatesCell0D;    // le coordinate per ciascun vertice
 
-    vector <unsigned int> IdCell1D;     // tutti gli id dei lati
+    vector<unsigned int> IdCell1D;     // tutti gli id dei lati
     vector<Vector2i> VerticesCell1D;    // gli id di start ed end per ciascun lato
 
     vector<unsigned int> NumberElements2D;      // il num dei vertici (= num dei lati) che lo compongono
