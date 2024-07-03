@@ -26,6 +26,8 @@ int main() {
         return 1;
     }
 
+    unsigned int idV = 0;
+
     unsigned int idT = 0;
     unordered_map<unsigned int, Trace> elenco_tracce;
     unsigned int n_key = CollectionFractures.size();
@@ -33,7 +35,7 @@ int main() {
         for(unsigned int idF2 = (idF1+1); idF2<n_key;idF2++){
             if(IntersezioneSfere(CollectionFractures[idF1], CollectionFractures[idF2])){
                 cout << "Le sfere delle fratture " << idF1 << " e " << idF2 << " si intersecano" << endl;
-                if(Find_Trace(trace, idT, CollectionFractures[idF1], CollectionFractures[idF2])){
+                if(Find_Trace(trace, idT, CollectionFractures[idF1], CollectionFractures[idF2], idV)){
                     trace.id1 = idF1;
                     trace.id2 = idF2;
                     elenco_tracce[idT] = trace;
@@ -47,8 +49,8 @@ int main() {
     FileTrace<< idT <<endl;
     FileTrace<<"#TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2"<<endl;
     for(unsigned int i = 0; i < idT ; i++ ){
-        FileTrace<< i << " "<<elenco_tracce[i].id1<< " "<<elenco_tracce[i].id2<< " "<<elenco_tracce[i].Vertices.first[0]<<" "<<elenco_tracce[i].Vertices.first[1]<<" "<<
-            elenco_tracce[i].Vertices.first[2]<<" "<<elenco_tracce[i].Vertices.second[0]<<" "<<elenco_tracce[i].Vertices.second[1]<<" "<<elenco_tracce[i].Vertices.second[2]<<endl;
+        FileTrace<< i << " "<<elenco_tracce[i].id1<< " "<<elenco_tracce[i].id2<< " "<<elenco_tracce[i].Vertices.first.second[0]<<" "<<elenco_tracce[i].Vertices.first.second[1]<<" "<<
+            elenco_tracce[i].Vertices.first.second[2]<<" "<<elenco_tracce[i].Vertices.second.second[0]<<" "<<elenco_tracce[i].Vertices.second.second[1]<<" "<<elenco_tracce[i].Vertices.second.second[2]<<endl;
     }
 
     //SECONDO FILE OUTPUT
@@ -77,7 +79,6 @@ int main() {
 
     map<unsigned int, SottoPoligoni> Sotto_poligoni;
     unsigned int idSP = 0;
-    unsigned int idV = 0;
     map<unsigned int, list<unsigned int>> Tracce_SottoPoligoni; //lista che associa ad ogni traccia i sottopoligoni che la toccano; verrà aggiornata dopo AnalizzaTraccia
     for (unsigned int idP=0; idP < CollectionFractures.size(); idP++){
         //prima divisione
@@ -102,7 +103,6 @@ int main() {
             primo.estremi.insert({primo.NonPassanti[i], elenco_tracce[primo.NonPassanti[i]].Vertices});
         }
         Sotto_poligoni.insert({idSP, primo});    //aggiungiamo alla lista dei sottopoligoni primo
-
 
         string flag_p = "passanti";
         string flag_np = "nonpassanti";

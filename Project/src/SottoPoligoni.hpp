@@ -15,7 +15,7 @@ struct SottoPoligoni{
     unsigned int numVertici;
     vector<unsigned int> Passanti;
     vector<unsigned int> NonPassanti;
-    map<unsigned int, pair<Vector3d, Vector3d>> estremi; //gli id di tutte le tracce associati ai valori
+    map<unsigned int, pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>>> estremi; //gli id di tutte le tracce associati ai valori
 
     SottoPoligoni() = default;
 };
@@ -24,7 +24,7 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
                     map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni,const string& flag, unsigned int& idSP, unsigned int& idV,
                     PolygonalLibrary::PolygonalMesh& mesh);
 void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni& taglio, unsigned int& id_traccia, SottoPoligoni& uscente,
-                     SottoPoligoni& entrante, Vector3d& VettoreEntrante, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni);
+                     SottoPoligoni& entrante, Vector3d& VettoreEntrante, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni, unsigned int& idV);
 
 
 inline unsigned int Regola_Mano_Destra(Vector3d u, Vector3d v, Vector3d controllo_uscente){

@@ -135,7 +135,7 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, Matrix3Xd& vert
 }
 
 
-pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters){
+pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters, unsigned int& idV){
     //trova l'inizio e la fine dell'intersezione
     Vector3d intersection_start;
     Vector3d intersection_end ;
@@ -156,7 +156,7 @@ pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3
     if (alfa_start >= alfa_end){
         // Se non c'è sovrapposizione, possiamo restituire un valore indicativo
         // di nessuna intersezione, come due punti uguali o una coppia di zero.
-        return {Vector3d::Zero(), Vector3d::Zero()};
+        return {{0,Vector3d::Zero()}, {0,Vector3d::Zero()}};
     }
 
     double norma_r = retta_inters.row(1).norm();
@@ -165,24 +165,24 @@ pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3
         intersection_end[i] = retta_inters(0,i) + (alfa_end/(norma_r*norma_r))*retta_inters(1,i);
     }
 
-    return {intersection_start, intersection_end};
+    return {{idV,intersection_start}, {idV+1,intersection_end}};
 }
 
 
-bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTraccia){
+bool Tips (vector<Vector3d>& intersezioni, pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>>& verticiTraccia){
     unsigned int passante = 0;
     double tol = 1e-9;
     // controlliamo il primo poligono
-    if (fabs(verticiTraccia.first[0] - intersezioni[0][0]) <= tol &&
-        fabs(verticiTraccia.first[1] - intersezioni[0][1]) <= tol &&
-        fabs(verticiTraccia.first[2] - intersezioni[0][2]) <= tol) {
+    if (fabs(verticiTraccia.first.second[0] - intersezioni[0][0]) <= tol &&
+        fabs(verticiTraccia.first.second[1] - intersezioni[0][1]) <= tol &&
+        fabs(verticiTraccia.first.second[2] - intersezioni[0][2]) <= tol) {
         passante += 1;
     }
 
     // controlliamo il secondo
-    if(fabs(verticiTraccia.second[0] - intersezioni[1][0]) <= tol &&
-       fabs(verticiTraccia.second[1] - intersezioni[1][1]) <= tol &&
-       fabs(verticiTraccia.second[2] - intersezioni[1][2]) <= tol) {
+    if(fabs(verticiTraccia.second.second[0] - intersezioni[1][0]) <= tol &&
+       fabs(verticiTraccia.second.second[1] - intersezioni[1][1]) <= tol &&
+       fabs(verticiTraccia.second.second[2] - intersezioni[1][2]) <= tol) {
         passante += 1;
     }
 
@@ -194,7 +194,7 @@ bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTracc
 
 
 //typedef Matrix<double, 3, 1> Vector3d;
-bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2) {
+bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2, unsigned int& idV) {
     Matrix<double,2,3> retta_intersezione = IntersezionePiani(poligono1, poligono2);
 
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
@@ -210,10 +210,11 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
 
 
 
-    pair<Vector3d, Vector3d> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione);
-    if(tr.first != Vector3d::Zero() && tr.second != Vector3d::Zero()){
+    pair<pair<unsigned int, Vector3d>, pair<unsigned int, Vector3d>> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione, idV);
+    if(!(tr.first.first == 0 && tr.second.first == 0)){
+        idV += 2;
         trace.Vertices = tr;
-        trace.length = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
+        trace.length = sqrt(DistanzaEuclidea(trace.Vertices.second.second, trace.Vertices.first.second));
         if(Tips(intersezioni1, trace.Vertices))
         {poligono1.traccePassanti.push_back(idT);}
         else {poligono1.tracceNonPassanti.push_back(idT);}

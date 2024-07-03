@@ -9,19 +9,19 @@ using namespace std;
 
 namespace GeometryLibrary {
 
-void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni& taglio, unsigned int& id_traccia, SottoPoligoni& uscente, SottoPoligoni& entrante, Vector3d& VettoreEntrante, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni){
+void AnalizzaTraccia(pair<unsigned int,Vector3d>& start_taglio, pair<unsigned int,Vector3d>& end_taglio, SottoPoligoni& taglio, unsigned int& id_traccia, SottoPoligoni& uscente, SottoPoligoni& entrante, Vector3d& VettoreEntrante, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni, unsigned int& idV){
     //prendo gli estremi della traccia
-    Vector3d start = taglio.estremi[id_traccia].first;
-    Vector3d end = taglio.estremi[id_traccia].second;
+    pair<unsigned int,Vector3d> start = taglio.estremi[id_traccia].first;
+    pair<unsigned int,Vector3d> end = taglio.estremi[id_traccia].second;
 
     unsigned int count = 0; //per valutare se la traccia appartiene a un solo sottopoligono o a entrambi
     bool sovrapp_start = false;
     bool sovrapp_end = false;
 
-    if(Regola_Mano_Destra(end_taglio - start_taglio, start - start_taglio, VettoreEntrante) == 1) {       //uscente
+    if(Regola_Mano_Destra(end_taglio.second - start_taglio.second, start.second - start_taglio.second, VettoreEntrante) == 1) {       //uscente
         uscente.estremi[id_traccia].first = start;
         count ++;}
-    else if(Regola_Mano_Destra(end_taglio - start_taglio, start - start_taglio, VettoreEntrante) == 0)  //entrante
+    else if(Regola_Mano_Destra(end_taglio.second - start_taglio.second, start.second - start_taglio.second, VettoreEntrante) == 0)  //entrante
         entrante.estremi[id_traccia].first = start;
     else {
         //start è sulla traccia di taglio
@@ -29,10 +29,10 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
     }
 
     //lo analizzo con l'end
-    if(Regola_Mano_Destra(end_taglio - start_taglio, end - start_taglio, VettoreEntrante) == 1) {       //uscente
+    if(Regola_Mano_Destra(end_taglio.second - start_taglio.second, end.second - start_taglio.second, VettoreEntrante) == 1) {       //uscente
         uscente.estremi[id_traccia].second = end;
         count ++;}
-    else if(Regola_Mano_Destra(end_taglio - start_taglio, end - start_taglio, VettoreEntrante) == 0)  //entrante
+    else if(Regola_Mano_Destra(end_taglio.second - start_taglio.second, end.second - start_taglio.second, VettoreEntrante) == 0)  //entrante
         entrante.estremi[id_traccia].second = end;
     else {
         //end è sulla traccia di taglio
@@ -119,18 +119,18 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
         case 1:
             /*Le tracce si intersecano, quindi dobbiamo trovare l'intersezione
             In questo caso allo stesso id_traccia saranno associate due tracce "diverse" a seconda che sono in uscente o entrante (NON nello stesso) */
-            Vector2d coeff = CoefficientiRette(start, end, start_taglio, end_taglio-start_taglio);
-            Vector3d intersezione = start + coeff[0]*(end - start); //abbiamo trovato l'intersezione
+            Vector2d coeff = CoefficientiRette(start.second, end.second, start_taglio.second, end_taglio.second-start_taglio.second);
+            Vector3d intersezione = start.second + coeff[0]*(end.second - start.second); //abbiamo trovato l'intersezione
             if (trovato){
                 //devo inserire il punto di intersezione
-                if ((uscente.estremi[id_traccia].first - start).norm() <= 1e-14){
+                if ((uscente.estremi[id_traccia].first.second - start.second).norm() <= 1e-14){
                     //significa che lo start sta in uscente
-                    uscente.estremi[id_traccia].second = intersezione;
-                    entrante.estremi[id_traccia].first = intersezione;
+                    uscente.estremi[id_traccia].second = {idV,intersezione};
+                    entrante.estremi[id_traccia].first = {idV,intersezione};
                 }
                 else {
-                    uscente.estremi[id_traccia].first = intersezione;
-                    entrante.estremi[id_traccia].second = intersezione;
+                    uscente.estremi[id_traccia].first = {idV,intersezione};
+                    entrante.estremi[id_traccia].second = {idV,intersezione};
                 }
                 //aggiungo alla traccia l'id dei sottopoligoni ad essa associati
                 Tracce_SottoPoligoni[id_traccia].push_back(uscente.id);
@@ -144,16 +144,16 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
                 //se il prodotto vettoriale tra i lati del sottopoligono e il vettore dato dalla distanza tra uno dei punti tra start ed end e uno dei vertici del lato
                 //è 0 --> start o end (a seconda di quello scelto) appartiene al poligono
                 for(unsigned int i = 0; i < uscente.numVertici; i++){ //qui vedo se è passante per il sottopoligono uscente
-                    if (Regola_Mano_Destra(uscente.Vertici[(i+1)%uscente.numVertici].second - uscente.Vertici[i].second, start - uscente.Vertici[i].second, VettoreEntrante) == 2 ||
-                        Regola_Mano_Destra(uscente.Vertici[(i+1)%uscente.numVertici].second - uscente.Vertici[i].second, end - uscente.Vertici[i].second, VettoreEntrante) == 2){
-                        if ((uscente.estremi[id_traccia].first - start).norm() <= 1e-14){
+                    if (Regola_Mano_Destra(uscente.Vertici[(i+1)%uscente.numVertici].second - uscente.Vertici[i].second, start.second - uscente.Vertici[i].second, VettoreEntrante) == 2 ||
+                        Regola_Mano_Destra(uscente.Vertici[(i+1)%uscente.numVertici].second - uscente.Vertici[i].second, end.second - uscente.Vertici[i].second, VettoreEntrante) == 2){
+                        if ((uscente.estremi[id_traccia].first.second - start.second).norm() <= 1e-14){
                             //significa che lo start sta in uscente
-                            uscente.estremi[id_traccia].second = intersezione;
-                            entrante.estremi[id_traccia].first = intersezione;
+                            uscente.estremi[id_traccia].second = {idV,intersezione};
+                            entrante.estremi[id_traccia].first = {idV,intersezione};
                         }
                         else {
-                            uscente.estremi[id_traccia].first = intersezione;
-                            entrante.estremi[id_traccia].second = intersezione;
+                            uscente.estremi[id_traccia].first = {idV,intersezione};
+                            entrante.estremi[id_traccia].second = {idV,intersezione};
                         }
                         Tracce_SottoPoligoni[id_traccia].push_back(uscente.id);
                         uscente.Passanti.push_back(id_traccia);
@@ -165,16 +165,16 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
                 //ora controllo se è passante per il sottopoligono entrante
                 if (flag == false){
                     for(unsigned int i = 0; i < entrante.numVertici; i++){ //qui vedo se è passante per il sottopoligono entrante
-                        if (Regola_Mano_Destra(entrante.Vertici[(i+1)%entrante.numVertici].second - entrante.Vertici[i].second, start - entrante.Vertici[i].second, VettoreEntrante) == 2 ||
-                            Regola_Mano_Destra(entrante.Vertici[(i+1)%entrante.numVertici].second - entrante.Vertici[i].second, end - entrante.Vertici[i].second, VettoreEntrante) == 2){
-                            if ((entrante.estremi[id_traccia].first - start).norm() <= 1e-14){
+                        if (Regola_Mano_Destra(entrante.Vertici[(i+1)%entrante.numVertici].second - entrante.Vertici[i].second, start.second - entrante.Vertici[i].second, VettoreEntrante) == 2 ||
+                            Regola_Mano_Destra(entrante.Vertici[(i+1)%entrante.numVertici].second - entrante.Vertici[i].second, end.second - entrante.Vertici[i].second, VettoreEntrante) == 2){
+                            if ((entrante.estremi[id_traccia].first.second - start.second).norm() <= 1e-14){
                                 //significa che lo start sta in entrante
-                                entrante.estremi[id_traccia].second = intersezione;
-                                uscente.estremi[id_traccia].first = intersezione;
+                                entrante.estremi[id_traccia].second = {idV,intersezione};
+                                uscente.estremi[id_traccia].first = {idV,intersezione};
                             }
                             else {
-                                entrante.estremi[id_traccia].first = intersezione;
-                                uscente.estremi[id_traccia].second = intersezione;
+                                entrante.estremi[id_traccia].first = {idV,intersezione};
+                                uscente.estremi[id_traccia].second = {idV,intersezione};
                             }
                             Tracce_SottoPoligoni[id_traccia].push_back(entrante.id);
                             entrante.Passanti.push_back(id_traccia);
@@ -186,14 +186,14 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
                 }
 
                 if(flag == false){
-                    if ((entrante.estremi[id_traccia].first - start).norm() <= 1e-14){
+                    if ((entrante.estremi[id_traccia].first.second - start.second).norm() <= 1e-14){
                         //significa che lo start sta in uscente
-                        entrante.estremi[id_traccia].second = intersezione;
-                        uscente.estremi[id_traccia].first = intersezione;
+                        entrante.estremi[id_traccia].second = {idV,intersezione};
+                        uscente.estremi[id_traccia].first = {idV,intersezione};
                     }
                     else {
-                        entrante.estremi[id_traccia].first = intersezione;
-                        uscente.estremi[id_traccia].second = intersezione;
+                        entrante.estremi[id_traccia].first = {idV,intersezione};
+                        uscente.estremi[id_traccia].second = {idV,intersezione};
                     }
                     Tracce_SottoPoligoni[id_traccia].push_back(entrante.id);
                     entrante.NonPassanti.push_back(id_traccia);
@@ -202,6 +202,7 @@ void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni
                     flag = true;
                 }
             }
+            idV++;
             break;
         }
     }
@@ -220,8 +221,8 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
     entrante.id = idSP+2;
     uscente.Vertici.reserve(5);
     entrante.Vertici.reserve(5);
-    Vector3d start;
-    Vector3d end;
+    pair<unsigned int, Vector3d> start;
+    pair<unsigned int, Vector3d> end;
     if (flag == "passanti"){
         start = frattura.estremi[id_tr].first;
         end = frattura.estremi[id_tr].second;
@@ -230,8 +231,14 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
         //allunga traccia
         // start ed end sono i punti di intersezione
         Matrix<double,2,3> traccia;
-        traccia.row(0) = frattura.estremi[id_tr].first;
-        traccia.row(1) = frattura.estremi[id_tr].second - frattura.estremi[id_tr].first;
+        if (frattura.estremi.count(id_tr)){
+            cout << "esiste" << endl;
+        }
+        cout << "tentativo: " << frattura.estremi[id_tr].first.first << endl;
+        pair<unsigned int,Vector3d> b = frattura.estremi[id_tr].first;
+        Vector3d c = frattura.estremi[id_tr].first.second;
+        traccia.row(0) << frattura.estremi[id_tr].first.second[0], frattura.estremi[id_tr].first.second[1], frattura.estremi[id_tr].first.second[2];
+        traccia.row(1) = frattura.estremi[id_tr].second.second - frattura.estremi[id_tr].first.second;
         Matrix3Xd vertici;
         vertici.resize(3, frattura.numVertici);
         for (unsigned int m=0; m<frattura.numVertici; m++){
@@ -240,14 +247,20 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
         vector<Vector3d> intersezioni = Intersection_Point(traccia, vertici, frattura.numVertici);
 
         if (isLess(intersezioni[1], intersezioni[0], traccia)) swap(intersezioni[1], intersezioni[0]);
-        start = intersezioni[0];
-        end = intersezioni[1];
-    }
-    if (){
-        mesh.IdCell0D.push_back(idV);
-        mesh.CoordinatesCell0D.push_back(start);
-        mesh.IdCell0D.push_back(idV+1);
-        mesh.CoordinatesCell0D.push_back(end);
+
+        if(intersezioni[0] != frattura.estremi[id_tr].first.second && intersezioni[1] != frattura.estremi[id_tr].second.second){
+            start = {idV, intersezioni[0]};
+            end = {idV+1, intersezioni[1]};
+        }
+        else if (intersezioni[0] != frattura.estremi[id_tr].first.second){
+            start = {idV, intersezioni[0]};
+            end = frattura.estremi[id_tr].second;
+        }
+        else {
+            start = frattura.estremi[id_tr].first;
+            end = {idV+1, intersezioni[1]};
+        }
+        idV++;
     }
 
 
@@ -255,7 +268,7 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
 
     //iteriamo sui vertici dei poligoni
     cout << "vertici sottopoligono: ";
-    if (Regola_Mano_Destra(end-start, frattura.Vertici[0].second-start, Direzione_Uscente) == 1){
+    if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[0].second-start.second, Direzione_Uscente) == 1){
         uscente.Vertici.push_back({frattura.Vertici[0].first, frattura.Vertici[0].second});
         segn = true;
     }
@@ -265,10 +278,10 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
     }
     cout << frattura.Vertici[0].first << " ";
     for (unsigned int i=1; i < frattura.numVertici; i++){
-        if (Regola_Mano_Destra(end-start, frattura.Vertici[i].second-start, Direzione_Uscente) == 1){
+        if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[i].second-start.second, Direzione_Uscente) == 1){
             if (segn == false){
-                uscente.Vertici.push_back({idV + 1,end});
-                entrante.Vertici.push_back({idV + 1, end});
+                uscente.Vertici.push_back(end);
+                entrante.Vertici.push_back(end);
                 // PolygonalLibrary::Add_Vert_to_Mesh(mesh, idV+1, end);
                 cout << idV+1 << " ";
             }
@@ -277,8 +290,8 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
         }
         else {
             if (segn == true){
-                uscente.Vertici.push_back({idV,start});
-                entrante.Vertici.push_back({idV,start});
+                uscente.Vertici.push_back(start);
+                entrante.Vertici.push_back(start);
                 // PolygonalLibrary::Add_Vert_to_Mesh(mesh, idV, start);
                 cout << idV << " ";
             }
@@ -287,18 +300,18 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
         }
         cout << frattura.Vertici[i].first << " ";
     }
-    if (Regola_Mano_Destra(end-start, frattura.Vertici[0].second-start, Direzione_Uscente) == 1){
+    if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[0].second-start.second, Direzione_Uscente) == 1){
         if (segn == false){
-            uscente.Vertici.push_back({idV + 1,end});
-            entrante.Vertici.push_back({idV + 1, end});
+            uscente.Vertici.push_back(end);
+            entrante.Vertici.push_back(end);
             // PolygonalLibrary::Add_Vert_to_Mesh(mesh, idV+1, end);
             cout << idV+1 << " ";
         }
     }
     else {
         if (segn == true){
-            uscente.Vertici.push_back({idV,start});
-            entrante.Vertici.push_back({idV,start});
+            uscente.Vertici.push_back(start);
+            entrante.Vertici.push_back(start);
             // PolygonalLibrary::Add_Vert_to_Mesh(mesh, idV, start);
             cout << idV << " ";
         }
@@ -323,9 +336,8 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
         unsigned int key = k->first;
         if(key == id_tr){
             continue; }
-        AnalizzaTraccia(start, end, frattura, key, uscente, entrante, Direzione_Uscente, Tracce_SottoPoligoni); //struttura trace delle tracce che corrispondono a questo id
+        AnalizzaTraccia(start, end, frattura, key, uscente, entrante, Direzione_Uscente, Tracce_SottoPoligoni, idV); //struttura trace delle tracce che corrispondono a questo id
     }
-    idV += 2;
     Sotto_poligoni.erase(id_sott);
     idSP ++;
     Sotto_poligoni.insert({idSP, uscente});

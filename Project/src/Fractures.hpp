@@ -55,7 +55,7 @@ bool IntersezioneSfere(Fracture& polygon1, Fracture& polygon2);
 
 struct Trace{
     unsigned int id;
-    pair<Vector3d, Vector3d> Vertices;
+    pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>> Vertices;
     double length;
     unsigned int id1;
     unsigned int id2;
@@ -98,11 +98,11 @@ inline bool isLess(Vector3d p1, Vector3d p0, Matrix<double,2,3> retta_inters) {
     return (p1[0] - p0[0]) * retta_inters(1,0) + (p1[1] - p0[1]) * retta_inters(1,1) + (p1[2] - p0[2]) * retta_inters(1,2) < 0;
 }
 
-pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters);
+pair<pair<unsigned int,Vector3d>, pair<unsigned int,Vector3d>> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters, unsigned int& idV);
 
-bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTraccia);
+bool Tips (vector<Vector3d>& intersezioni, pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>>& verticiTraccia);
 
-bool Find_Trace(Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2);
+bool Find_Trace(Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2, unsigned int& idV);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
