@@ -16,13 +16,14 @@ struct SottoPoligoni{
     vector<unsigned int> Passanti;
     vector<unsigned int> NonPassanti;
     map<unsigned int, pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>>> estremi; //gli id di tutte le tracce associati ai valori
+    vector<pair<unsigned int, pair<unsigned int, unsigned int>>> Lati;
 
     SottoPoligoni() = default;
 };
 //prendiamo l elenco delle tracce passanti
 void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& id_sott, map<unsigned int, SottoPoligoni>& Sotto_poligoni,
                     map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni,const string& flag, unsigned int& idSP, unsigned int& idV,
-                    PolygonalLibrary::PolygonalMesh& mesh);
+                    PolygonalLibrary::PolygonalMesh& mesh, map<unsigned int, vector<unsigned int>>& mappaLati);
 void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni& taglio, unsigned int& id_traccia, SottoPoligoni& uscente,
                      SottoPoligoni& entrante, Vector3d& VettoreEntrante, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni, unsigned int& idV);
 
@@ -38,14 +39,20 @@ inline unsigned int Regola_Mano_Destra(Vector3d u, Vector3d v, Vector3d controll
     else
         return 2; //uguale a 0
 }
+
+inline bool Punto_su_Lato(Vector3d p1, Vector3d p2, Vector3d q){
+    Matrix3Xd A = p2 - p1;
+    Vector3d b = q - p1;
+    VectorXd alpha = A.colPivHouseholderQr().solve(b);
+    double alfa = alpha[0];
+
+    if ((alfa < 0) || (alfa > 1))
+        return false;
+    if (abs(q[0] - p1[0] - alfa*(p2[0] - p1[0])) > 1e-8 || abs(q[1] - p1[1] - alfa*(p2[1] - p1[1])) > 1e-8 || abs(q[2] - p1[2] - alfa*(p2[2] - p1[2])) > 1e-8)
+        return false;
+
+    return true;
 }
 
-// namespace PolygonalLibrary{
-// inline void Add_Vert_to_Mesh(PolygonalMesh& mesh, unsigned int& idV, Vector3d& Coordinates){
-//     if(mesh.IdCell0D[idV] = idV){
-//         return;     //c'è già
-//     }
-//     mesh.IdCell0D[idV] = idV;
-//     mesh.CoordinatesCell0D[idV] = Coordinates;
-// }
-// }
+}
+

@@ -16,6 +16,17 @@ using namespace Eigen;
 
 namespace GeometryLibrary {
 
+bool operator== (const VectorXd v1, const VectorXd v2){
+    if (v1.size() != v2.size())
+        return false;
+
+    for (unsigned int i=0; i<v1.size(); i++){
+        if(abs(v1[i] - v2[i]) > 1e-14)
+            return false;
+    }
+    return true;
+}
+
 // I dati del baricentro sono in un vettore lungo 3
 Vector3d Fracture::Baricentro(Matrix3Xd &poligono) {
     Vector3d baricentro;
@@ -194,7 +205,7 @@ bool Tips (vector<Vector3d>& intersezioni, pair<pair<unsigned int,Vector3d>,pair
 
 
 //typedef Matrix<double, 3, 1> Vector3d;
-bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2, unsigned int& idV) {
+bool Find_Trace(Trace& trace, unsigned int& idL, Fracture& poligono1, Fracture& poligono2, unsigned int& idV, PolygonalLibrary::PolygonalMesh& mesh) {
     Matrix<double,2,3> retta_intersezione = IntersezionePiani(poligono1, poligono2);
 
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
@@ -212,17 +223,19 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
 
     pair<pair<unsigned int, Vector3d>, pair<unsigned int, Vector3d>> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione, idV);
     if(!(tr.first.first == 0 && tr.second.first == 0)){
+        PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.first);
+        PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.second);
         idV += 2;
         trace.Vertices = tr;
         trace.length = sqrt(DistanzaEuclidea(trace.Vertices.second.second, trace.Vertices.first.second));
         if(Tips(intersezioni1, trace.Vertices))
-        {poligono1.traccePassanti.push_back(idT);}
-        else {poligono1.tracceNonPassanti.push_back(idT);}
+        {poligono1.traccePassanti.push_back(idL);}
+        else {poligono1.tracceNonPassanti.push_back(idL);}
 
         if(Tips(intersezioni2, trace.Vertices)){
-            poligono2.traccePassanti.push_back(idT);}
-        else {poligono2.tracceNonPassanti.push_back(idT);}
-        trace.id = idT;
+            poligono2.traccePassanti.push_back(idL);}
+        else {poligono2.tracceNonPassanti.push_back(idL);}
+        trace.id = idL;
         return true;
     }
 
@@ -283,8 +296,5 @@ void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_m
 
     file.close();
 }
-
-
-
 }
 

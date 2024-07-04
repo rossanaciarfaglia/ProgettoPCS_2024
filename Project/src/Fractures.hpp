@@ -6,6 +6,7 @@
 #include <utility>
 #include <map>
 #include <vector>
+#include "PolygonalMesh.hpp"
 using namespace Eigen;
 using namespace std;
 
@@ -102,7 +103,7 @@ pair<pair<unsigned int,Vector3d>, pair<unsigned int,Vector3d>> Traccia(vector<Ve
 
 bool Tips (vector<Vector3d>& intersezioni, pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>>& verticiTraccia);
 
-bool Find_Trace(Trace& trace, unsigned int& idT, Fracture& polygon1, Fracture& polygon2, unsigned int& idV);
+bool Find_Trace(Trace& trace, unsigned int& idL, Fracture& polygon1, Fracture& polygon2, unsigned int& idV, PolygonalLibrary::PolygonalMesh& mesh);
 
 void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_map<unsigned int, Fracture>& CollectionFractures);
 
@@ -111,5 +112,6 @@ inline bool compare(const pair<unsigned int, double>& coppia1, const pair<unsign
 }
 void OutputSort(vector<unsigned int>& IdTrace, unordered_map<unsigned int, Trace>& elencoTracce, ofstream& FileFracture, bool& tips);
 }
+
 
 #endif

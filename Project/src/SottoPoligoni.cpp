@@ -210,7 +210,7 @@ void AnalizzaTraccia(pair<unsigned int,Vector3d>& start_taglio, pair<unsigned in
 
 
 
-void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& id_sott, map<unsigned int, SottoPoligoni>& Sotto_poligoni, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni, const string& flag, unsigned int& idSP, unsigned int& idV, PolygonalLibrary::PolygonalMesh& mesh){
+void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& id_sott, map<unsigned int, SottoPoligoni>& Sotto_poligoni, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni, const string& flag, unsigned int& idSP, unsigned int& idV, PolygonalLibrary::PolygonalMesh& mesh, map<unsigned int, vector<unsigned int>>& mappaLati){
     //stabiliamo una direzione rispetto alla quale definiremo la regola della mano destra
     Vector3d Direzione_Uscente = ProdottoVettoriale(frattura.Vertici[1].second - frattura.Vertici[0].second,
                                                     frattura.Vertici[2].second - frattura.Vertici[1].second);   // Per assunzione della correttezza dei file, i poligoni hanno almeno 3 vertici
@@ -223,6 +223,7 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
     entrante.Vertici.reserve(5);
     pair<unsigned int, Vector3d> start;
     pair<unsigned int, Vector3d> end;
+    cout << "Nuovo poligono" << endl;
     if (flag == "passanti"){
         start = frattura.estremi[id_tr].first;
         end = frattura.estremi[id_tr].second;
@@ -231,12 +232,6 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
         //allunga traccia
         // start ed end sono i punti di intersezione
         Matrix<double,2,3> traccia;
-        if (frattura.estremi.count(id_tr)){
-            cout << "esiste" << endl;
-        }
-        cout << "tentativo: " << frattura.estremi[id_tr].first.first << endl;
-        pair<unsigned int,Vector3d> b = frattura.estremi[id_tr].first;
-        Vector3d c = frattura.estremi[id_tr].first.second;
         traccia.row(0) << frattura.estremi[id_tr].first.second[0], frattura.estremi[id_tr].first.second[1], frattura.estremi[id_tr].first.second[2];
         traccia.row(1) = frattura.estremi[id_tr].second.second - frattura.estremi[id_tr].first.second;
         Matrix3Xd vertici;
@@ -248,78 +243,143 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
 
         if (isLess(intersezioni[1], intersezioni[0], traccia)) swap(intersezioni[1], intersezioni[0]);
 
-        if(intersezioni[0] != frattura.estremi[id_tr].first.second && intersezioni[1] != frattura.estremi[id_tr].second.second){
-            start = {idV, intersezioni[0]};
-            end = {idV+1, intersezioni[1]};
+        if(intersezioni[0] == frattura.estremi[id_tr].first.second || intersezioni[0] == frattura.estremi[id_tr].second.second){
+            start = frattura.estremi[id_tr].first;
+            end = {idV, intersezioni[1]};
+            PolygonalLibrary::Add_Vert_to_Mesh(mesh, end);
+            mappaLati[id_tr].push_back(idV);
+            idV++;
         }
-        else if (intersezioni[0] != frattura.estremi[id_tr].first.second){
+        else if (intersezioni[1] == frattura.estremi[id_tr].first.second || intersezioni[1] == frattura.estremi[id_tr].second.second){
             start = {idV, intersezioni[0]};
             end = frattura.estremi[id_tr].second;
+            PolygonalLibrary::Add_Vert_to_Mesh(mesh, start);
+            mappaLati[id_tr].push_back(idV);
+            idV++;
         }
         else {
-            start = frattura.estremi[id_tr].first;
+            start = {idV, intersezioni[0]};
             end = {idV+1, intersezioni[1]};
+            PolygonalLibrary::Add_Vert_to_Mesh(mesh, start);
+            PolygonalLibrary::Add_Vert_to_Mesh(mesh, end);
+            mappaLati[id_tr].push_back(idV);
+            mappaLati[id_tr].push_back(idV+1);
+            idV += 2;
         }
-        idV++;
     }
 
+    for (auto lato : frattura.Lati){
+        if (Punto_su_Lato(mesh.CoordinatesCell0D[lato.second.first], mesh.CoordinatesCell0D[lato.second.second], start.second)){
+            mappaLati[lato.first].push_back(start.first);
+
+        }
+        else if (Punto_su_Lato(mesh.CoordinatesCell0D[lato.second.first], mesh.CoordinatesCell0D[lato.second.second], end.second)){
+            mappaLati[lato.first].push_back(end.first);
+
+        }
+    }
 
     bool segn; // tiene segno dell'ultimo prodotto misto per sapere se sono passato dal sottopoligono uscente a quello entrante (o viceversa)
-
-    //iteriamo sui vertici dei poligoni
-    cout << "vertici sottopoligono: ";
-    if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[0].second-start.second, Direzione_Uscente) == 1){
-        uscente.Vertici.push_back({frattura.Vertici[0].first, frattura.Vertici[0].second});
+    bool check_trace = false;
+    //iteriamo sui lati dei poligoni
+    if (Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[0].second.first] - start.second, Direzione_Uscente) == 1){
         segn = true;
     }
     else {
-        entrante.Vertici.push_back({frattura.Vertici[0].first, frattura.Vertici[0].second});
         segn = false;
     }
-    cout << frattura.Vertici[0].first << " ";
-    for (unsigned int i=1; i < frattura.numVertici; i++){
-        if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[i].second-start.second, Direzione_Uscente) == 1){
+    for (unsigned int l=0; l<frattura.numVertici; l++){
+        if (Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second] - start.second, Direzione_Uscente) == 1){
             if (segn == false){
                 uscente.Vertici.push_back(end);
                 entrante.Vertici.push_back(end);
-                // PolygonalLibrary::Add_Vert_to_Mesh(mesh, idV+1, end);
-                cout << idV+1 << " ";
+                if (check_trace == false){
+                    uscente.Lati.push_back({id_tr, {start.first, end.first}});
+                    uscente.Lati.push_back({frattura.Lati[l].first, {end.first, frattura.Lati[l].second.second}});
+                    entrante.Lati.push_back({frattura.Lati[l].first, {frattura.Lati[l].second.first, end.first}});
+                    entrante.Lati.push_back({id_tr, {end.first, start.first}});
+                    check_trace = true;
+                }
+                else{
+                    uscente.Lati.push_back({frattura.Lati[l].first, {end.first, frattura.Lati[l].second.second}});
+                    entrante.Lati.push_back({frattura.Lati[l].first, {frattura.Lati[l].second.first, end.first}});
+                }
             }
-            uscente.Vertici.push_back({frattura.Vertici[i].first, frattura.Vertici[i].second});
+            else {
+                uscente.Lati.push_back(frattura.Lati[l]);
+            }
+            uscente.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
             segn = true;
         }
         else {
             if (segn == true){
                 uscente.Vertici.push_back(start);
                 entrante.Vertici.push_back(start);
-                // PolygonalLibrary::Add_Vert_to_Mesh(mesh, idV, start);
-                cout << idV << " ";
+                if (check_trace == false){
+                    uscente.Lati.push_back({frattura.Lati[l].first, {frattura.Lati[l].second.first, start.first}});
+                    uscente.Lati.push_back({id_tr, {start.first, end.first}});
+                    entrante.Lati.push_back({id_tr, {end.first, start.first}});
+                    entrante.Lati.push_back({frattura.Lati[l].first, {start.first, frattura.Lati[l].second.second}});
+                    check_trace = true;
+                }
+                else{
+                    uscente.Lati.push_back({frattura.Lati[l].first, {frattura.Lati[l].second.first, start.first}});
+                    entrante.Lati.push_back({frattura.Lati[l].first, {start.first, frattura.Lati[l].second.second}});
+                }
             }
-            entrante.Vertici.push_back({frattura.Vertici[i].first, frattura.Vertici[i].second});
+            else {
+                entrante.Lati.push_back(frattura.Lati[l]);
+            }
+            entrante.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
             segn = false;
         }
-        cout << frattura.Vertici[i].first << " ";
     }
-    if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[0].second-start.second, Direzione_Uscente) == 1){
-        if (segn == false){
-            uscente.Vertici.push_back(end);
-            entrante.Vertici.push_back(end);
-            // PolygonalLibrary::Add_Vert_to_Mesh(mesh, idV+1, end);
-            cout << idV+1 << " ";
-        }
-    }
-    else {
-        if (segn == true){
-            uscente.Vertici.push_back(start);
-            entrante.Vertici.push_back(start);
-            // PolygonalLibrary::Add_Vert_to_Mesh(mesh, idV, start);
-            cout << idV << " ";
-        }
-    }
-    cout << endl;
+
+
+
+
+
+    // if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[0].second-start.second, Direzione_Uscente) == 1){
+    //     uscente.Vertici.push_back({frattura.Vertici[0].first, frattura.Vertici[0].second});
+    //     segn = true;
+    // }
+    // else {
+    //     entrante.Vertici.push_back({frattura.Vertici[0].first, frattura.Vertici[0].second});
+    //     segn = false;
+    // }
+    // for (unsigned int i=1; i < frattura.numVertici; i++){
+    //     if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[i].second-start.second, Direzione_Uscente) == 1){
+    //         if (segn == false){
+    //             uscente.Vertici.push_back(end);
+    //             entrante.Vertici.push_back(end);
+    //         }
+    //         uscente.Vertici.push_back({frattura.Vertici[i].first, frattura.Vertici[i].second});
+    //         segn = true;
+    //     }
+    //     else {
+    //         if (segn == true){
+    //             uscente.Vertici.push_back(start);
+    //             entrante.Vertici.push_back(start);
+    //         }
+    //         entrante.Vertici.push_back({frattura.Vertici[i].first, frattura.Vertici[i].second});
+    //         segn = false;
+    //     }
+    // }
+    // if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[0].second-start.second, Direzione_Uscente) == 1){
+    //     if (segn == false){
+    //         uscente.Vertici.push_back(end);
+    //         entrante.Vertici.push_back(end);
+    //     }
+    // }
+    // else {
+    //     if (segn == true){
+    //         uscente.Vertici.push_back(start);
+    //         entrante.Vertici.push_back(start);
+    //     }
+    // }
+
     uscente.numVertici = uscente.Vertici.size();
     entrante.numVertici = entrante.Vertici.size();
-    cout << "e: " << entrante.numVertici << "       u: " << uscente.numVertici << endl;
     cout << "uscente: ";
     for(unsigned int l=0; l<uscente.numVertici; l++){
         cout << uscente.Vertici[l].first << " ";
