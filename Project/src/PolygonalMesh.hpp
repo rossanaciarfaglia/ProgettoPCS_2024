@@ -17,8 +17,8 @@ struct PolygonalMesh {
     vector<Vector2i> VerticesCell1D;    // gli id di start ed end per ciascun lato
 
     vector<unsigned int> NumberElements2D;      // il num dei vertici (= num dei lati) che lo compongono
-    vector<VectorXi> VerticesCell2D;        // gli id dei vertici in senso antiorario
-    vector<VectorXi> EdgesCell2D;       // gli id dei lati in senso antiorario
+    vector<vector<unsigned int>> VerticesCell2D;        // gli id dei vertici in senso antiorario
+    vector<vector<unsigned int>> EdgesCell2D;       // gli id dei lati in senso antiorario
 };
 
 inline void Add_Vert_to_Mesh(PolygonalMesh& mesh, pair<unsigned int, Vector3d> vertex){
@@ -26,12 +26,22 @@ inline void Add_Vert_to_Mesh(PolygonalMesh& mesh, pair<unsigned int, Vector3d> v
     mesh.CoordinatesCell0D.push_back(vertex.second);
 }
 
-inline void Add_Edge_to_Mesh(PolygonalMesh& mesh){
-    mesh.IdCell1D.push_back(0);
-    mesh.VerticesCell1D.push_back({0,0});
-}
 
-inline void Ordina_Punti(vector<unsigned int>& padre, vector<Vector3d> punti, vector<unsigned int>& ordinati){
+inline void Ordina_Punti(vector<unsigned int>& padre, vector<Vector3d> punti, vector<unsigned int>& ordinamento){
+    vector<double> coordinate(padre.size(),0);
+    Matrix3Xd A = punti[padre[1]] - punti[padre[0]];
+    Vector3d b;
+    VectorXd alpha;
+    for(unsigned int pt=0; pt<padre.size(); pt++){
+        b = punti[padre[pt]] - punti[padre[0]];
+        alpha = A.colPivHouseholderQr().solve(b);
+        coordinate[pt] = alpha[0];
+    }
+
+    for (unsigned int i=0; i<ordinamento.size(); i++){
+        ordinamento[i] = i;
+    }
+    sort(ordinamento.begin(), ordinamento.end(), [&](const unsigned int& a, const unsigned int& b){return(coordinate[a] < coordinate[b]);});
 
 }
 
