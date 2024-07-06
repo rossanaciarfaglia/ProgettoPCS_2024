@@ -64,16 +64,7 @@ struct Trace{
     Trace() = default;
 };
 
-/*struct Compare {
-    bool operator()(const double& a, const double& b) const {
-        return a > b; // Ordine decrescente
-    }
-};*/ // struct utilizzata dalla multimappa per ordinare gli elementi in ordine decrescente
-
-
-
 Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2);
-
 
 inline Vector2d CoefficientiRette (const Vector3d& P0, const Vector3d& P1, const Vector3d& Q, const Vector3d& dir_retta){
     Vector2d solution;

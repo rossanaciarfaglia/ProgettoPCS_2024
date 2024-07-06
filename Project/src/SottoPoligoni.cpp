@@ -14,6 +14,8 @@ void AnalizzaTraccia(pair<unsigned int,Vector3d>& start_taglio, pair<unsigned in
     pair<unsigned int,Vector3d> start = taglio.estremi[id_traccia].first;
     pair<unsigned int,Vector3d> end = taglio.estremi[id_traccia].second;
 
+    Tracce_SottoPoligoni[id_traccia].remove(taglio.id);
+
     unsigned int count = 0; //per valutare se la traccia appartiene a un solo sottopoligono o a entrambi
     bool sovrapp_start = false;
     bool sovrapp_end = false;
@@ -243,14 +245,14 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
 
         if (isLess(intersezioni[1], intersezioni[0], traccia)) swap(intersezioni[1], intersezioni[0]);
 
-        if(intersezioni[0] == frattura.estremi[id_tr].first.second || intersezioni[0] == frattura.estremi[id_tr].second.second){
+        if(intersezioni[0] == frattura.estremi[id_tr].first.second /*|| intersezioni[0] == frattura.estremi[id_tr].second.second*/){
             start = frattura.estremi[id_tr].first;
             end = {idV, intersezioni[1]};
             PolygonalLibrary::Add_Vert_to_Mesh(mesh, end);
             mappaLati[id_tr].push_back(idV);
             idV++;
         }
-        else if (intersezioni[1] == frattura.estremi[id_tr].first.second || intersezioni[1] == frattura.estremi[id_tr].second.second){
+        else if (/*intersezioni[1] == frattura.estremi[id_tr].first.second ||*/ intersezioni[1] == frattura.estremi[id_tr].second.second){
             start = {idV, intersezioni[0]};
             end = frattura.estremi[id_tr].second;
             PolygonalLibrary::Add_Vert_to_Mesh(mesh, start);
@@ -334,50 +336,6 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
             segn = false;
         }
     }
-
-
-
-
-
-    // if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[0].second-start.second, Direzione_Uscente) == 1){
-    //     uscente.Vertici.push_back({frattura.Vertici[0].first, frattura.Vertici[0].second});
-    //     segn = true;
-    // }
-    // else {
-    //     entrante.Vertici.push_back({frattura.Vertici[0].first, frattura.Vertici[0].second});
-    //     segn = false;
-    // }
-    // for (unsigned int i=1; i < frattura.numVertici; i++){
-    //     if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[i].second-start.second, Direzione_Uscente) == 1){
-    //         if (segn == false){
-    //             uscente.Vertici.push_back(end);
-    //             entrante.Vertici.push_back(end);
-    //         }
-    //         uscente.Vertici.push_back({frattura.Vertici[i].first, frattura.Vertici[i].second});
-    //         segn = true;
-    //     }
-    //     else {
-    //         if (segn == true){
-    //             uscente.Vertici.push_back(start);
-    //             entrante.Vertici.push_back(start);
-    //         }
-    //         entrante.Vertici.push_back({frattura.Vertici[i].first, frattura.Vertici[i].second});
-    //         segn = false;
-    //     }
-    // }
-    // if (Regola_Mano_Destra(end.second-start.second, frattura.Vertici[0].second-start.second, Direzione_Uscente) == 1){
-    //     if (segn == false){
-    //         uscente.Vertici.push_back(end);
-    //         entrante.Vertici.push_back(end);
-    //     }
-    // }
-    // else {
-    //     if (segn == true){
-    //         uscente.Vertici.push_back(start);
-    //         entrante.Vertici.push_back(start);
-    //     }
-    // }
-
     uscente.numVertici = uscente.Vertici.size();
     entrante.numVertici = entrante.Vertici.size();
     cout << "uscente: ";

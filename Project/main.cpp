@@ -87,7 +87,7 @@ int main() {
     for (unsigned int idP=0; idP < CollectionFractures.size(); idP++){
         SottoPoligoni primo;
         // (primo,idstart, idV, CollectionFractures, idP, )
-        primo.id = 0;
+        primo.id = idSP;
         idstart = idV;
         for (unsigned int v=0; v<CollectionFractures[idP].numVertici; v++){
             primo.Vertici.push_back({idV, CollectionFractures[idP].Vertici.col(v)});
@@ -119,6 +119,7 @@ int main() {
         cout << endl;
 
         if (primo.Passanti.size() != 0){
+            Tracce_SottoPoligoni[primo.Passanti[0]].push_back(primo.id);
             DividiPoligono(primo.Passanti[0], primo, idSP, Sotto_poligoni, Tracce_SottoPoligoni, flag_p, idSP, idV, mesh, mappaLati);     //DividiPoligono per la prima frattura
 
             for (unsigned int j=1; j<primo.Passanti.size(); j++){
@@ -145,6 +146,7 @@ int main() {
             cout << "No tracce per poligono " << idSP << endl;
             idSP++;
         }
+        Tracce_SottoPoligoni = {};
     }
     cout << "!" << endl;
 
@@ -174,45 +176,6 @@ int main() {
 
     vector<unsigned int> edges;
     vector<unsigned int> vertices;
-
-    // for(auto spol : Sotto_poligoni){
-    //     SottoPoligoni polig = spol.second;
-    //     for(auto lato : polig.Lati){
-    //         unsigned int lid = lato.first;
-    //         unsigned int start = lato.second.first;
-    //         unsigned int end = lato.second.second;
-    //         bool start_trovato = false;
-    //         vector<pair<unsigned int, pair<unsigned int, unsigned int>>> figli = listaFigli[lid];
-    //         for(unsigned int f_ind = 0; f_ind < figli.size(); f_ind++){
-    //             if(figli[f_ind].second.first == start){
-    //                 vertices.push_back(figli[f_ind].second.first);
-    //                 edges.push_back(figli[f_ind].first);
-    //                 for(unsigned int f_ind2 = f_ind+1; f_ind2 < figli.size(); f_ind++){
-    //                     if(figli[f_ind2].second.first != end){
-    //                         vertices.push_back(figli[f_ind2].second.first);
-    //                         edges.push_back(figli[f_ind2].first);
-    //                     }
-    //                     else{
-    //                         break;
-    //                     }
-    //                 }
-    //                 break;
-    //             }
-    //             else if(figli[f_ind].second.first == end){
-    //                 for(unsigned int f_ind2 = figli.size()-1; f_ind2 >= f_ind; f_ind2--){
-    //                     if(start_trovato == false && figli[f_ind2].second.second == start){
-    //                         start_trovato = true;
-    //                     }
-    //                     else if(start_trovato == true){
-    //                         vertices.push_back(figli[f_ind2].second.second);
-    //                         edges.push_back(figli[f_ind2].first);
-    //                     }
-    //                 }
-    //                 break;
-    //             }
-    //         }
-    //     }
-    // }
     unsigned int lid, start, end;
     bool start_trovato;
 
@@ -258,113 +221,6 @@ int main() {
         edges = {};
         vertices = {};
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // for(auto spol : Sotto_poligoni){
-    //     SottoPoligoni pol = spol.second;
-    //     for(auto l : pol.Lati){
-    //         // id lato = l.first
-    //         //listaFigli[l.first] = vector
-    //         for(unsigned int idfi=0; idfi<listaFigli[l.first].size(); idfi++){
-    //             if(listaFigli[l.first][idfi].second.first == l.second.first){
-    //                 edges.push_back(listaFigli[l.first][idfi].first);
-    //                 vertices.push_back(listaFigli[l.first][idfi].second.first);
-    //                 if(listaFigli[l.first][idfi].second.second == l.second.second){
-    //                     break;
-    //                 }
-    //                 else{
-    //                     for(unsigned int h = idfi+1; h<listaFigli[l.first].size(); h++){
-    //                         edges.push_back(listaFigli[l.first][h].first);
-    //                         vertices.push_back(listaFigli[l.first][h].second.first);
-    //                         if(listaFigli[l.first][h].second.second == l.second.second){
-    //                             break;
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //             else if(listaFigli[l.first][idfi].second.second == l.second.second){
-    //                 for(unsigned int opp = listaFigli[l.first].size()-1; opp>idfi; opp--){
-    //                     if(listaFigli[l.first][opp].second.second == l.second.first){
-    //                         edges.push_back(listaFigli[l.first][opp].first);
-    //                         vertices.push_back(listaFigli[l.first][opp].second.second);
-    //                         if(listaFigli[l.first][opp].second.first == l.second.second){
-    //                             break;
-    //                         }
-    //                         else{
-    //                             for(unsigned int h = opp-1; h<idfi; h++){
-    //                                 edges.push_back(listaFigli[l.first][h].first);
-    //                                 vertices.push_back(listaFigli[l.first][h].second.second);
-    //                                 if(listaFigli[l.first][h].second.first == l.second.second){
-    //                                     break;
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     mesh.EdgesCell2D.push_back(edges);
-    //     mesh.VerticesCell2D.push_back(vertices);
-    //     mesh.NumberElements2D.push_back(vertices.size());
-    //     edges = {};
-    //     vertices = {};
-    // }
-
-
-
-
-
-
-
-    // VectorXi edges;
-    // VectorXi vertices;
-    // for(auto spol = Sotto_poligoni.begin(); spol != Sotto_poligoni.end(); spol++){
-    //     SottoPoligoni pol = spol -> second;
-    //     for(unsigned int posizIdL=0; posizIdL<pol.Lati.size(); posizIdL++){     // Scorro su Lati del poligono
-    //         for(unsigned int j=0; j<listaFigli[pol.Lati[posizIdL].first].size(); j++){  // Scorro sul vettore di listaFigli associato all'idLato studiato
-    //             if (listaFigli[pol.Lati[posizIdL].first][j].second.first == pol.Lati[posizIdL].second.first){
-    //                 edges[posizIdL + j] = listaFigli[pol.Lati[posizIdL].first][j].first;
-    //                 vertices[posizIdL + j] = listaFigli[pol.Lati[posizIdL].first][j].second.first;
-    //                 if(listaFigli[pol.Lati[posizIdL].first][j].second.second == pol.Lati[posizIdL].second.second){
-    //                     vertices[posizIdL + j] = listaFigli[pol.Lati[posizIdL].first][j].second.second;
-    //                     break;
-    //                 }
-    //                 else{
-    //                     for(unsigned int k=j+1; k<listaFigli[pol.Lati[posizIdL].first].size(); k++){
-    //                         edges[posizIdL + j] = listaFigli[pol.Lati[posizIdL].first][k].first;
-    //                         vertices[posizIdL + j] = listaFigli[pol.Lati[posizIdL].first][k].second.first;
-    //                         if(listaFigli[pol.Lati[posizIdL].first][k].second.second == pol.Lati[posizIdL].second.second){
-    //                             vertices[posizIdL + j] = listaFigli[pol.Lati[posizIdL].first][k].second.second;
-    //                             break;
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     edges = {};
-    //     vertices = {};
-    // }
-
 
 
     cout << "IdCell0D:  ";
