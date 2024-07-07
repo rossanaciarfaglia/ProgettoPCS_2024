@@ -266,10 +266,113 @@ TEST(IntersectionsTest, TestIsLess){
 }
 
 
-TEST(IntersectionTests, TestTraccia){
+TEST(IntersectionsTests, TestTraccia){
+    unsigned int idV = 5;
+    vector<Vector3d> intersezioni1 = {{-2,0,0}, {0.5,0,0}};
+    vector<Vector3d> intersezioni2 = {{0,0,0}, {1,0,0}};
+    Matrix<double,2,3> retta;
+    retta << 0,0,0,
+        1,0,0;
+    pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>> result = Traccia(intersezioni1, intersezioni2, retta, idV);
+    pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>> expected_res = {{5, {0,0,0}}, {6, {0.5,0,0}}};
 
-
+    EXPECT_EQ(result.first.first, expected_res.first.first);
+    for(unsigned int i=0; i<3; i++){
+        EXPECT_NEAR(result.first.second[i], expected_res.first.second[i], 1e-9);
+    }
+    EXPECT_EQ(result.second.first, expected_res.second.first);
+    for(unsigned int i=0; i<3; i++){
+        EXPECT_NEAR(result.second.second[i], expected_res.second.second[i], 1e-9);
+    }
 }
 
+
+TEST(IntersectionsTests, TestTips_1){
+    vector<Vector3d> intersezioni = {{-2,0,0}, {0.5,0,0}};
+    pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>> traccia = {{5, {0,0,0}}, {6, {0.5,0,0}}};
+
+    bool result = Tips(intersezioni, traccia);
+    EXPECT_FALSE(result);
+}
+
+TEST(IntersectionsTests, TestTips_2){
+    vector<Vector3d> intersezioni = {{0,0,9}, {0,0,9.4}};
+    pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>> traccia = {{0, {0,0,9}}, {1, {0,0,9.4}}};
+
+    bool result = Tips(intersezioni, traccia);
+    EXPECT_TRUE(result);
+}
+
+
+TEST(IntersectionsTests, TestFind_Trace_1){
+    Trace trace;
+    PolygonalLibrary::PolygonalMesh mesh;
+    unsigned int idL = 1;
+    unsigned int idV = 5;
+
+    Fracture poligono1;
+    Fracture poligono2;
+    unsigned int v_tr = 3;
+    unsigned int v_qu = 4;
+    Matrix3Xd Triangolo = (MatrixXd(3,3) << 3,3,2,
+                           2,1,1,
+                           1,1,1).finished();
+    Matrix3Xd Quadrilatero = (MatrixXd(3,4) << 3,2,2,3,
+                              1.6,1.6,1.6,1.6,
+                              0.2,0.2,2,2).finished();
+    poligono1.numVertici = v_tr;
+    poligono1.Vertici = Triangolo;
+    poligono2.numVertici = v_qu;
+    poligono2.Vertici = Quadrilatero;
+
+    bool result = Find_Trace(trace, idL, poligono1, poligono2, idV, mesh);
+    EXPECT_TRUE(result);
+}
+
+TEST(IntersectionsTests, TestFind_Trace_2){
+    Trace trace;
+    PolygonalLibrary::PolygonalMesh mesh;
+    unsigned int idL = 1;
+    unsigned int idV = 5;
+
+    Fracture poligono1;
+    Fracture poligono2;
+    unsigned int v_tr = 3;
+    unsigned int v_qu = 4;
+    Matrix3Xd Triangolo = (MatrixXd(3,3) << 3,3,2,
+                           2,1,1,
+                           1,1,1).finished();
+    Matrix3Xd Quadrilatero = (MatrixXd(3,4) << 3,2,2,3,
+                              2.6,2.6,2.6,2.6,
+                              1,1,2,2).finished();
+    poligono1.numVertici = v_tr;
+    poligono1.Vertici = Triangolo;
+    poligono2.numVertici = v_qu;
+    poligono2.Vertici = Quadrilatero;
+
+    bool result = Find_Trace(trace, idL, poligono1, poligono2, idV, mesh);
+    EXPECT_FALSE(result);
+}
+
+
+TEST(InputOutputTests, ImportFracturesListTest){
+    string filepath = "./DFN/FR3_data.txt";
+    Fracture fracture;
+    unordered_map<unsigned int, Fracture> CollectionFractures;
+
+    ImportFracturesList(filepath, fracture, CollectionFractures);
+    cout << CollectionFractures.size() << endl;
+
+    EXPECT_EQ(CollectionFractures.size(), 3);
+}
+
+
+TEST(InputOutputTests, CompareTest){
+    pair<unsigned int, double> coppia1 = {2, 7.9};
+    pair<unsigned int, double> coppia2 = {3, 7.9};
+
+    bool result = compare(coppia1, coppia2);
+    EXPECT_FALSE(result);
+}
 
 }
