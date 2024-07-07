@@ -26,7 +26,10 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
                     PolygonalLibrary::PolygonalMesh& mesh, map<unsigned int, vector<unsigned int>>& mappaLati);
 void AnalizzaTraccia(Vector3d& start_taglio, Vector3d& end_taglio, SottoPoligoni& taglio, unsigned int& id_traccia, SottoPoligoni& uscente,
                      SottoPoligoni& entrante, Vector3d& VettoreEntrante, map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni, unsigned int& idV);
-
+void Convertitore_struct(SottoPoligoni& primo, unsigned int& idSP, unsigned int& idstart, unsigned int& idV, unsigned int& idL,
+                         unordered_map<unsigned int, Trace>& elenco_tracce, unordered_map<unsigned int, Fracture>& CollectionFractures,
+                         unsigned int& idP, map<unsigned int, SottoPoligoni>& Sotto_poligoni,
+                         map<unsigned int, vector<unsigned int>>& mappaLati, PolygonalLibrary::PolygonalMesh& mesh);
 
 inline unsigned int Regola_Mano_Destra(Vector3d u, Vector3d v, Vector3d controllo_uscente){
     /* ora effettuo il prodotto scalare tra il vettore che ho stabilito entrante e il vettore che viene dal prodotto vettoriale

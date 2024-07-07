@@ -13,7 +13,7 @@ using namespace PolygonalLibrary;
 
 int main() {
     bool tips;
-    string filepath = "./DFN/FR3_data.txt";
+    string filepath = "./DFN/FR10_data.txt";
     Fracture fracture;
     unordered_map<unsigned int, Fracture> CollectionFractures; // Il costo computazionale è O(1), non O(logn)
 
@@ -86,28 +86,7 @@ int main() {
     unsigned int idstart;
     for (unsigned int idP=0; idP < CollectionFractures.size(); idP++){
         SottoPoligoni primo;
-        // (primo,idstart, idV, CollectionFractures, idP, )
-        primo.id = idSP;
-        idstart = idV;
-        for (unsigned int v=0; v<CollectionFractures[idP].numVertici; v++){
-            primo.Vertici.push_back({idV, CollectionFractures[idP].Vertici.col(v)});
-            primo.Lati.push_back({idL,{idV, idstart + (idV+1-idstart)%CollectionFractures[idP].numVertici}});
-            Add_Vert_to_Mesh(mesh, {idV, CollectionFractures[idP].Vertici.col(v)});
-            mappaLati.insert({idL,{idV, idstart + (idV+1-idstart)%CollectionFractures[idP].numVertici}});
-            idL++;
-            idV++;
-        }
-        primo.Passanti = CollectionFractures[idP].traccePassanti;
-        primo.NonPassanti = CollectionFractures[idP].tracceNonPassanti;
-        primo.numVertici = CollectionFractures[idP].numVertici;
-
-        for(unsigned int i = 0; i < primo.Passanti.size(); i++){
-            primo.estremi.insert({primo.Passanti[i], elenco_tracce[primo.Passanti[i]].Vertices});
-        }
-        for(unsigned int i = 0; i < primo.NonPassanti.size(); i++){
-            primo.estremi.insert({primo.NonPassanti[i], elenco_tracce[primo.NonPassanti[i]].Vertices});
-        }
-        Sotto_poligoni.insert({idSP, primo});    //aggiungiamo alla lista dei sottopoligoni primo
+        Convertitore_struct(primo, idSP, idstart, idV, idL, elenco_tracce, CollectionFractures, idP, Sotto_poligoni, mappaLati, mesh);
 
         string flag_p = "passanti";
         string flag_np = "nonpassanti";
@@ -134,6 +113,7 @@ int main() {
             }
         }
         else if (primo.NonPassanti.size() != 0) {
+            Tracce_SottoPoligoni[primo.NonPassanti[0]].push_back(primo.id);
             DividiPoligono(primo.NonPassanti[0], primo, idSP, Sotto_poligoni, Tracce_SottoPoligoni, flag_np, idSP, idV, mesh, mappaLati);       //DividiPoligono per la prima frattura
 
             for (unsigned int k=1; k<primo.NonPassanti.size(); k++){
@@ -146,6 +126,7 @@ int main() {
             cout << "No tracce per poligono " << idSP << endl;
             idSP++;
         }
+        cout << "finito poligono " << primo.id << endl;
         Tracce_SottoPoligoni = {};
     }
     cout << "!" << endl;
