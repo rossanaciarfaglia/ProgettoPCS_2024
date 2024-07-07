@@ -429,34 +429,52 @@ int main() {
     // Close the output file stream
     FileTrace.close();
     FileFracture.close();
-    return 0;
 
     // Per esportare in Paraview
-    string exportFolder = "C:/Users/User/OneDrive/Desktop/ProgettoPCS_2024/debug/";
+    string exportFolder = "./";
     Gedim::UCDUtilities exporter;
 
-    MatrixXd points(mesh.CoordinatesCell0D.size(), 3);
-    for (unsigned int p = 0; p < mesh.CoordinatesCell0D.size(); ++p) {
-        points(p,0) = mesh.CoordinatesCell0D[p][0] ;
-        points(p,1) = mesh.CoordinatesCell0D[p][1] ;
-        points(p,2) = mesh.CoordinatesCell0D[p][2];
+    MatrixXd points(3, mesh.CoordinatesCell0D.size());
+    for (unsigned int p = 0; p < mesh.CoordinatesCell0D.size(); p++) {
+        points(0,p) = mesh.CoordinatesCell0D[p][0] ;
+        points(1,p) = mesh.CoordinatesCell0D[p][1] ;
+        points(2,p) = mesh.CoordinatesCell0D[p][2];
     };
+
     exporter.ExportPoints(exportFolder + "/Celle0Ds.inp",
                           points);
 
-    MatrixXi edge(mesh.VerticesCell1D.size(), 2);
-    for (unsigned int  i = 0; i < mesh.VerticesCell1D.size(); ++i) {
-        edge(i, 0) = mesh.VerticesCell1D[i][0];
-        edge(i, 1) = mesh.VerticesCell1D[i][1];
+   MatrixXi edge(2,mesh.VerticesCell1D.size());
+    for (unsigned int  i = 0; i < mesh.VerticesCell1D.size(); i++) {
+        edge(0,i) = mesh.VerticesCell1D[i][0];
+        edge(1,i) = mesh.VerticesCell1D[i][1];
     };
+
     exporter.ExportSegments(exportFolder + "/Geometry1Ds.inp",
                             points,
-                            edge);
+                            edge,
+                            {},
+                            {},
+                            {});
 
-    vector<vector<unsigned int>> polygons = mesh.VerticesCell2D;
+    /*vector<vector<unsigned int>> polygons(mesh.VerticesCell2D.size());
+
+    for (unsigned int k = 0; k < mesh.VerticesCell2D.size(); ++k) {
+        polygons[k].resize(mesh.VerticesCell2D[k].size());  // Dimensiona il vettore interno di polygons[k]
+
+        for (unsigned int j = 0; j < mesh.VerticesCell2D[k].size(); ++j) {
+
+            polygons[k][j] = mesh.VerticesCell2D[k][j];  // Copia ogni elemento da mesh.VerticesCell2D a polygons
+            cout<< mesh.VerticesCell2D[k][j]<< endl;
+        }
+
+    }
+
     exporter.ExportPolygons(exportFolder + "/Geometry2Ds.inp",
                             points,
                             polygons);
-
+    cout<<"return paraview"<< endl;
+*/
+    return 0;
 
 }
