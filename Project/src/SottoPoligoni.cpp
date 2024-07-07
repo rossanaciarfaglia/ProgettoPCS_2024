@@ -273,13 +273,13 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
         }
     }
 
-    // for(unsigned int i=0; i<frattura.numVertici; i++){
-    //     if(Punto_su_Lato(frattura.Vertici[i].second, frattura.Vertici[(i+1)%frattura.numVertici].second, start.second)
-    //        && Punto_su_Lato(frattura.Vertici[i].second, frattura.Vertici[(i+1)%frattura.numVertici].second, end.second)){
-    //         cout << "sullo stesso lato" << endl;
-    //         return;
-    //     }
-    // }
+    for(unsigned int i=0; i<frattura.numVertici; i++){
+        if(Punto_su_Lato(frattura.Vertici[i].second, frattura.Vertici[(i+1)%frattura.numVertici].second, start.second)
+           && Punto_su_Lato(frattura.Vertici[i].second, frattura.Vertici[(i+1)%frattura.numVertici].second, end.second)){
+            cout << "sullo stesso lato" << endl;
+            return;
+        }
+    }
 
     for (auto lato : frattura.Lati){
         if (Punto_su_Lato(mesh.CoordinatesCell0D[lato.second.first], mesh.CoordinatesCell0D[lato.second.second], start.second)){
