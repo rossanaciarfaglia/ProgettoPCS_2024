@@ -287,6 +287,7 @@ int main() {
     return 0;
 
 
+     // Per esportare in Paraview
     string exportFolder = "C:/Users/User/OneDrive/Desktop/ProgettoPCS_2024/debug/";
     Gedim::UCDUtilities exporter;
 
