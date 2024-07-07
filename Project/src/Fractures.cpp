@@ -16,8 +16,19 @@ using namespace Eigen;
 
 namespace GeometryLibrary {
 
+bool operator== (const VectorXd v1, const VectorXd v2){
+    if (v1.size() != v2.size())
+        return false;
+
+    for (unsigned int i=0; i<v1.size(); i++){
+        if(abs(v1[i] - v2[i]) > 1e-14)
+            return false;
+    }
+    return true;
+}
+
 // I dati del baricentro sono in un vettore lungo 3
-Vector3d Fracture::Baricentro(MatrixXd &poligono) {
+Vector3d Fracture::Baricentro(Matrix3Xd &poligono) {
     Vector3d baricentro;
     for(unsigned int riga = 0; riga < 3; riga++) {
         double sum = 0;
@@ -31,7 +42,7 @@ Vector3d Fracture::Baricentro(MatrixXd &poligono) {
 
 
 // Raggio delle sfere !!AL QUADRATO!!
-double Fracture::Raggio(Vector3d &baricentro, MatrixXd &poligono) {
+double Fracture::Raggio(Vector3d &baricentro, Matrix3Xd &poligono) {
     double R = 0;
     double dist;
     for (unsigned int colonna=0; colonna<numVertici; colonna++){
@@ -47,7 +58,7 @@ double Fracture::Raggio(Vector3d &baricentro, MatrixXd &poligono) {
 }
 
 
-Vector4d Fracture::TrovaPiano(MatrixXd &poligono){
+Vector4d Fracture::TrovaPiano(Matrix3Xd &poligono){
     Vector3d u;
     Vector3d v;
     for (unsigned int coordinate=0; coordinate<3; coordinate++){           // (Sono x,y e z)
@@ -56,11 +67,9 @@ Vector4d Fracture::TrovaPiano(MatrixXd &poligono){
     }
 
     Vector4d piano;   // è il vettore normale n + la costante d
-    piano[0] = (u[1]*v[2]-v[1]*u[2]);
-    piano[1] = (v[0]*u[2]-u[0]*v[2]);
-    piano[2] = (u[0]*v[1]-v[0]*u[1]);
-
+    piano << ProdottoVettoriale(u,v), 0;
     piano[3] = piano[0]*poligono(0,0) + piano[1]*poligono(1,0) + piano[2]*poligono(2,0);
+    cout << "piano: " << piano[0] << " " << piano[1] << " " << piano[2] << " " << piano[3] << " " << endl;
 
     return piano;
 }
@@ -85,10 +94,7 @@ Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2) {
 
     Vector4d n1 = polygon1.TrovaPiano(polygon1.Vertici);
     Vector4d n2 = polygon2.TrovaPiano(polygon2.Vertici);
-    Vector3d t;
-    t[0] = n1[1]*n2[2]-n1[2]*n2[1];
-    t[1] = n1[2]*n2[0]-n1[0]*n2[2];
-    t[2] = n1[0]*n2[1]-n1[1]*n2[0];
+    Vector3d t = ProdottoVettoriale(n1,n2);
 
     if(t.norm() != 0) {
     // Non sono paralleli o complanari
@@ -115,13 +121,13 @@ Matrix<double,2,3> IntersezionePiani(Fracture &polygon1, Fracture& polygon2) {
 }
 
 
-vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, MatrixXd& vertici, const unsigned int& numVert){
+vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, Matrix3Xd& vertici, const unsigned int& numVert){
     Vector3d punto_intersezione;
     vector<Vector3d> intersezioni;
     intersezioni.reserve(2);
     Vector2d system_solution;
     for(unsigned int c = 0; c < numVert; c++){
-        system_solution = ParametriRetta(vertici.col(c), vertici.col((c+1)%numVert), retta.row(0), retta.row(1));
+        system_solution = CoefficientiRette(vertici.col(c), vertici.col((c+1)%numVert), retta.row(0), retta.row(1));
 
         if (system_solution[0] >= 0 && system_solution[0] <= 1) {   // Questo è il segmento
             // Calcola le coordinate del punto di intersezione
@@ -131,22 +137,16 @@ vector<Vector3d> Intersection_Point(Matrix<double, 2, 3>& retta, MatrixXd& verti
             intersezioni.push_back(punto_intersezione);
         }
         //altrimenti non ci sono intersezioni lato, retta di intersezione piani
-        //cout << "intersezioni lato " << c << " e successivo:" << endl << punto_intersezione[0] << " " << punto_intersezione[1] << " " << punto_intersezione[2] << " " << endl;
     }
 
     if(intersezioni.size()==0){
         intersezioni.push_back({INFINITY,INFINITY,INFINITY});
     }
-
-    cout << "intersezioni:" << endl;
-    for (int i = 0; i< intersezioni.size(); i++){
-        cout << intersezioni[i][0] << " " << intersezioni[i][1] << " " << intersezioni[i][2] << " " << endl << endl;
-    }
     return intersezioni;
 }
 
 
-pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters){
+pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters, unsigned int& idV){
     //trova l'inizio e la fine dell'intersezione
     Vector3d intersection_start;
     Vector3d intersection_end ;
@@ -167,7 +167,7 @@ pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3
     if (alfa_start >= alfa_end){
         // Se non c'è sovrapposizione, possiamo restituire un valore indicativo
         // di nessuna intersezione, come due punti uguali o una coppia di zero.
-        return {Vector3d::Zero(), Vector3d::Zero()};
+        return {{0,Vector3d::Zero()}, {0,Vector3d::Zero()}};
     }
 
     double norma_r = retta_inters.row(1).norm();
@@ -176,24 +176,24 @@ pair<Vector3d, Vector3d> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3
         intersection_end[i] = retta_inters(0,i) + (alfa_end/(norma_r*norma_r))*retta_inters(1,i);
     }
 
-    return {intersection_start, intersection_end};
+    return {{idV,intersection_start}, {idV+1,intersection_end}};
 }
 
 
-bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTraccia){
+bool Tips (vector<Vector3d>& intersezioni, pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>>& verticiTraccia){
     unsigned int passante = 0;
     double tol = 1e-9;
     // controlliamo il primo poligono
-    if (fabs(verticiTraccia.first[0] - intersezioni[0][0]) <= tol &&
-        fabs(verticiTraccia.first[1] - intersezioni[0][1]) <= tol &&
-        fabs(verticiTraccia.first[2] - intersezioni[0][2]) <= tol) {
+    if (fabs(verticiTraccia.first.second[0] - intersezioni[0][0]) <= tol &&
+        fabs(verticiTraccia.first.second[1] - intersezioni[0][1]) <= tol &&
+        fabs(verticiTraccia.first.second[2] - intersezioni[0][2]) <= tol) {
         passante += 1;
     }
 
     // controlliamo il secondo
-    if(fabs(verticiTraccia.second[0] - intersezioni[1][0]) <= tol &&
-       fabs(verticiTraccia.second[1] - intersezioni[1][1]) <= tol &&
-       fabs(verticiTraccia.second[2] - intersezioni[1][2]) <= tol) {
+    if(fabs(verticiTraccia.second.second[0] - intersezioni[1][0]) <= tol &&
+       fabs(verticiTraccia.second.second[1] - intersezioni[1][1]) <= tol &&
+       fabs(verticiTraccia.second.second[2] - intersezioni[1][2]) <= tol) {
         passante += 1;
     }
 
@@ -205,8 +205,7 @@ bool Tips (vector<Vector3d>& intersezioni, pair<Vector3d,Vector3d>& verticiTracc
 
 
 //typedef Matrix<double, 3, 1> Vector3d;
-bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& poligono2) {
-    bool tips;
+bool Find_Trace(Trace& trace, unsigned int& idL, Fracture& poligono1, Fracture& poligono2, unsigned int& idV, PolygonalLibrary::PolygonalMesh& mesh) {
     Matrix<double,2,3> retta_intersezione = IntersezionePiani(poligono1, poligono2);
 
     vector<Vector3d> intersezioni1 = Intersection_Point(retta_intersezione, poligono1.Vertici, poligono1.numVertici);
@@ -221,21 +220,22 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
     if (isLess(intersezioni2[1], intersezioni2[0], retta_intersezione)) swap(intersezioni2[1], intersezioni2[0]);
 
 
-    pair<Vector3d, Vector3d> a = Traccia(intersezioni1, intersezioni2, retta_intersezione);
-    if(a.first != Vector3d::Zero() && a.second != Vector3d::Zero()){
-        trace.Vertices = a;
-        trace.Vertices = Traccia(intersezioni1, intersezioni2, retta_intersezione);
-        trace.lenght = sqrt(DistanzaEuclidea(trace.Vertices.second, trace.Vertices.first));
-        tips = Tips(intersezioni1, trace.Vertices);
-        if(tips)
-        {poligono1.traccePassanti.push_back(idT);}
-        else {poligono1.tracceNonPassanti.push_back(idT);}
 
-        tips = Tips(intersezioni2, trace.Vertices);
-        if(tips){
-            poligono2.traccePassanti.push_back(idT);}
-        else {poligono2.tracceNonPassanti.push_back(idT);}
-        trace.id = idT;
+    pair<pair<unsigned int, Vector3d>, pair<unsigned int, Vector3d>> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione, idV);
+    if(!(tr.first.first == 0 && tr.second.first == 0)){
+        PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.first);
+        PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.second);
+        idV += 2;
+        trace.Vertices = tr;
+        trace.length = sqrt(DistanzaEuclidea(trace.Vertices.second.second, trace.Vertices.first.second));
+        if(Tips(intersezioni1, trace.Vertices))
+        {poligono1.traccePassanti.push_back(idL);}
+        else {poligono1.tracceNonPassanti.push_back(idL);}
+
+        if(Tips(intersezioni2, trace.Vertices)){
+            poligono2.traccePassanti.push_back(idL);}
+        else {poligono2.tracceNonPassanti.push_back(idL);}
+        trace.id = idL;
         return true;
     }
 
@@ -243,18 +243,20 @@ bool Find_Trace(Trace& trace, unsigned int& idT,Fracture& poligono1, Fracture& p
 }
 
 
-void OutputSort (const vector<unsigned int>& IdTrace, const vector<Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
-    unordered_map<unsigned int, double> dizionario;
-    for(unsigned int i = 0; i < IdTrace.size(); i++){
-        dizionario.insert({IdTrace[i], elencoTracce[IdTrace[i]].lenght});
+void OutputSort (vector<unsigned int>& IdTrace, unordered_map<unsigned int, Trace>& elencoTracce, ofstream& FileFracture, bool& tips){
+    //trasferimento elementi in un vettore di coppie per poter utilizzare sort
+    vector<pair<unsigned int, double>> coppie_traccia;
+    for (unsigned int i=0; i<IdTrace.size();i++){
+        coppie_traccia.push_back({IdTrace[i],elencoTracce[IdTrace[i]].length});
     }
-    //trasferimento elementi del dizionario in un vettore di coppie per poter utilizzare sort
-    vector<pair<unsigned int, double>> coppie_traccia(dizionario.begin(), dizionario.end());
     //ordinamento del vettore (in ordine decrescente)
     sort(coppie_traccia.begin(), coppie_traccia.end(), compare);
+    unsigned int count = 0;
     for (const auto& elem : coppie_traccia) {
-        // Fai qualcosa con elem
         FileFracture << elem.first << " " << tips << " " << elem.second << endl;
+        if(IdTrace[count] != elem.first)
+        {IdTrace[count] = elem.first;}
+        count++;
     }
 }
 
@@ -294,8 +296,5 @@ void ImportFracturesList(const string& filepath, Fracture& fracture, unordered_m
 
     file.close();
 }
-
-
-
 }
 
