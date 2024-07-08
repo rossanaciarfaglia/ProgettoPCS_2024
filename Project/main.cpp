@@ -267,4 +267,33 @@ int main() {
     FileTrace.close();
     FileFracture.close();
     return 0;
+
+
+
+    // Per esportare in Paraview
+    string exportFolder = "C:/Users/User/OneDrive/Desktop/ProgettoPCS_2024/debug/";
+    Gedim::UCDUtilities exporter;
+
+    MatrixXd points(mesh.CoordinatesCell0D.size(), 3);
+    for (unsigned int p = 0; p < mesh.CoordinatesCell0D.size(); ++p) {
+        points(p,0) = mesh.CoordinatesCell0D[p][0] ;
+        points(p,1) = mesh.CoordinatesCell0D[p][1] ;
+        points(p,2) = mesh.CoordinatesCell0D[p][2];
+    };
+    exporter.ExportPoints(exportFolder + "/Celle0Ds.inp",
+                          points);
+
+    MatrixXi edge(mesh.VerticesCell1D.size(), 2);
+    for (unsigned int  i = 0; i < mesh.VerticesCell1D.size(); ++i) {
+        edge(i, 0) = mesh.VerticesCell1D[i][0];
+        edge(i, 1) = mesh.VerticesCell1D[i][1];
+    };
+    exporter.ExportSegments(exportFolder + "/Geometry1Ds.inp",
+                            points,
+                            edge);
+
+    vector<vector<unsigned int>> polygons = mesh.VerticesCell2D;
+    exporter.ExportPolygons(exportFolder + "/Geometry2Ds.inp",
+                            points,
+                            polygons);
 }

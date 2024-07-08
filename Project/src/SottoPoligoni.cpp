@@ -307,12 +307,16 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
 
     bool segn; // tiene segno dell'ultimo prodotto misto per sapere se sono passato dal sottopoligono uscente a quello entrante (o viceversa)
     bool check_trace = false;
+    bool caso_vertice = false;
     //iteriamo sui lati dei poligoni
     if (Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[0].second.first] - start.second, Direzione_Uscente) == 1){
         segn = true;
     }
-    else {
+    else if(Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[0].second.first] - start.second, Direzione_Uscente) == 0){
         segn = false;
+    }
+    else {
+        caso_vertice = true;
     }
     for (unsigned int l=0; l<frattura.numVertici; l++){
         if (Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second] - start.second, Direzione_Uscente) == 1){
