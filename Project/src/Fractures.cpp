@@ -223,24 +223,72 @@ bool Find_Trace(Trace& trace, unsigned int& idL, Fracture& poligono1, Fracture& 
 
     pair<pair<unsigned int, Vector3d>, pair<unsigned int, Vector3d>> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione, idV);
     if(!(tr.first.first == 0 && tr.second.first == 0)){
-        PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.first);
-        PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.second);
-        idV += 2;
-        trace.Vertices = tr;
-        trace.length = sqrt(DistanzaEuclidea(trace.Vertices.second.second, trace.Vertices.first.second));
-        if(Tips(intersezioni1, trace.Vertices))
-        {poligono1.traccePassanti.push_back(idL);}
-        else {poligono1.tracceNonPassanti.push_back(idL);}
+//         PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.first);
+//         PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.second);
+//         idV += 2;
+//         trace.Vertices = tr;
+//         trace.length = sqrt(DistanzaEuclidea(trace.Vertices.second.second, trace.Vertices.first.second));
+//         if(Tips(intersezioni1, trace.Vertices)){
+//             poligono1.traccePassanti.push_back(idL);
+//         }
+//         else {
+//             poligono1.tracceNonPassanti.push_back(idL);
+//         }
 
-        if(Tips(intersezioni2, trace.Vertices)){
-            poligono2.traccePassanti.push_back(idL);}
-        else {poligono2.tracceNonPassanti.push_back(idL);}
-        trace.id = idL;
-        return true;
+//         if(Tips(intersezioni2, trace.Vertices)){
+//             poligono2.traccePassanti.push_back(idL);
+//         }
+//         else {
+//             poligono2.tracceNonPassanti.push_back(idL);
+//         }
+//         trace.id = idL;
+//         return true;
+//     }
+
+//     return false;
+// }
+        bool pol1_sovrap = true;
+        bool pol2_sovrap = true;
+        for(unsigned int i=0; i<poligono1.numVertici; i++){
+            if(ProdottoVettoriale(poligono1.Vertici.col((i+1)%poligono1.numVertici) - poligono1.Vertici.col(i), tr.second.second - tr.first.second) == Vector3d::Zero()){
+                if (Punto_Allineato(poligono1.Vertici.col((i+1)%poligono1.numVertici), poligono1.Vertici.col(i), tr.second.second))
+                    pol1_sovrap = false;
+            }
+        }
+        for(unsigned int i=0; i<poligono2.numVertici; i++){
+            if(ProdottoVettoriale(poligono2.Vertici.col((i+1)%poligono1.numVertici) - poligono2.Vertici.col(i), tr.second.second - tr.first.second) == Vector3d::Zero()){
+                if (Punto_Allineato(poligono2.Vertici.col((i+1)%poligono1.numVertici), poligono2.Vertici.col(i), tr.second.second))
+                    pol2_sovrap = false;
+            }
+        }
+
+        if(pol1_sovrap && pol2_sovrap){
+            PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.first);
+            PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.second);
+            idV += 2;
+            trace.Vertices = tr;
+            trace.length = sqrt(DistanzaEuclidea(trace.Vertices.second.second, trace.Vertices.first.second));
+
+            if(pol1_sovrap){
+                if(Tips(intersezioni1, trace.Vertices))
+                    poligono1.traccePassanti.push_back(idL);
+                else
+                    poligono1.tracceNonPassanti.push_back(idL);
+            }
+
+            if(pol2_sovrap){
+                if(Tips(intersezioni2, trace.Vertices))
+                    poligono2.traccePassanti.push_back(idL);
+                else
+                    poligono2.tracceNonPassanti.push_back(idL);
+            }
+            trace.id = idL;
+            return true;
+        }
     }
-
     return false;
 }
+
 
 
 void OutputSort (vector<unsigned int>& IdTrace, unordered_map<unsigned int, Trace>& elencoTracce, ofstream& FileFracture, bool& tips){

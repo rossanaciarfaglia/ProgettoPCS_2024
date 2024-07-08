@@ -90,6 +90,18 @@ inline bool isLess(Vector3d p1, Vector3d p0, Matrix<double,2,3> retta_inters) {
     return (p1[0] - p0[0]) * retta_inters(1,0) + (p1[1] - p0[1]) * retta_inters(1,1) + (p1[2] - p0[2]) * retta_inters(1,2) < 0;
 }
 
+inline bool Punto_Allineato(Vector3d p1, Vector3d p2, Vector3d q){
+    Matrix3Xd A = p2 - p1;
+    Vector3d b = q - p1;
+    VectorXd alpha = A.colPivHouseholderQr().solve(b);
+    double alfa = alpha[0];
+
+    if (abs(q[0] - p1[0] - alfa*(p2[0] - p1[0])) < 1e-8 && abs(q[1] - p1[1] - alfa*(p2[1] - p1[1])) < 1e-8 && abs(q[2] - p1[2] - alfa*(p2[2] - p1[2])) < 1e-8)
+        return true;
+
+    return false;
+}
+
 pair<pair<unsigned int,Vector3d>, pair<unsigned int,Vector3d>> Traccia(vector<Vector3d> &intersezioni1, vector<Vector3d> &intersezioni2, Matrix<double,2,3> retta_inters, unsigned int& idV);
 
 bool Tips (vector<Vector3d>& intersezioni, pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>>& verticiTraccia);

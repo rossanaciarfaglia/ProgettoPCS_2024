@@ -266,6 +266,25 @@ TEST(IntersectionsTest, TestIsLess){
 }
 
 
+TEST(GeneralFunctions, TestPuntoAllineato_1){
+    Vector3d P0 = {3,2.6,1};
+    Vector3d P1 = {2,2.6,1};
+    Vector3d Q = {2.5,1,1};
+
+    bool result = Punto_Allineato(P0, P1, Q);
+    EXPECT_FALSE(result);
+}
+
+TEST(GeneralFunctions, TestPuntoAllineato_2){
+    Vector3d P0 = {3,2.6,1};
+    Vector3d P1 = {2,2.6,1};
+    Vector3d Q = {2.5,2.6,1};
+
+    bool result = Punto_Allineato(P0, P1, Q);
+    EXPECT_TRUE(result);
+}
+
+
 TEST(IntersectionsTests, TestTraccia){
     unsigned int idV = 5;
     vector<Vector3d> intersezioni1 = {{-2,0,0}, {0.5,0,0}};
