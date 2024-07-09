@@ -199,8 +199,13 @@ int main() {
     return 0;
 
 
+<<<<<<< HEAD
     // Per esportare in Paraview
     string exportFolder = "./";
+=======
+     // Per esportare in Paraview
+    string exportFolder = "C:/Users/User/OneDrive/Desktop/ProgettoPCS_2024/debug/";
+>>>>>>> fb0f8bdbd0108d3af9a02158139dcc5eaa0767bc
     Gedim::UCDUtilities exporter;
 
     MatrixXd points(3, mesh.CoordinatesCell0D.size());
