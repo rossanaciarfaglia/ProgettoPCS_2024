@@ -13,7 +13,7 @@ using namespace PolygonalLibrary;
 
 int main() {
     bool tips;
-    string filepath = "./DFN/FR10_data.txt";
+    string filepath = "./DFN/prova3.txt";
     Fracture fracture;
     unordered_map<unsigned int, Fracture> CollectionFractures; // Il costo computazionale è O(1), non O(logn)
 

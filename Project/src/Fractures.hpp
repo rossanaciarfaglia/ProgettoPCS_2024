@@ -78,7 +78,7 @@ inline Vector2d CoefficientiRette (const Vector3d& P0, const Vector3d& P1, const
     // Risoluzione del sistema lineare
     else {
         solution(0) = -1;
-        solution(1) = -1; //assegnamo soluzioni che scarta
+        solution(1) = -1; //assegniamo soluzioni che scarta
     }
 
     return solution;
@@ -96,7 +96,7 @@ inline bool Punto_Allineato(Vector3d p1, Vector3d p2, Vector3d q){
     VectorXd alpha = A.colPivHouseholderQr().solve(b);
     double alfa = alpha[0];
 
-    if (abs(q[0] - p1[0] - alfa*(p2[0] - p1[0])) < 1e-8 && abs(q[1] - p1[1] - alfa*(p2[1] - p1[1])) < 1e-8 && abs(q[2] - p1[2] - alfa*(p2[2] - p1[2])) < 1e-8)
+    if (abs(q[0] - p1[0] - alfa*(p2[0] - p1[0])) < 1e-12 && abs(q[1] - p1[1] - alfa*(p2[1] - p1[1])) < 1e-8 && abs(q[2] - p1[2] - alfa*(p2[2] - p1[2])) < 1e-12)
         return true;
 
     return false;

@@ -21,7 +21,7 @@ bool operator== (const VectorXd v1, const VectorXd v2){
         return false;
 
     for (unsigned int i=0; i<v1.size(); i++){
-        if(abs(v1[i] - v2[i]) > 1e-14)
+        if(abs(v1[i] - v2[i]) > 1e-12)
             return false;
     }
     return true;
@@ -182,7 +182,7 @@ pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>> Traccia(vector<Vec
 
 bool Tips (vector<Vector3d>& intersezioni, pair<pair<unsigned int,Vector3d>,pair<unsigned int,Vector3d>>& verticiTraccia){
     unsigned int passante = 0;
-    double tol = 1e-9;
+    double tol = 1e-12;
     // controlliamo il primo poligono
     if (fabs(verticiTraccia.first.second[0] - intersezioni[0][0]) <= tol &&
         fabs(verticiTraccia.first.second[1] - intersezioni[0][1]) <= tol &&
@@ -259,9 +259,7 @@ bool Find_Trace(Trace& trace, unsigned int& idL, Fracture& poligono1, Fracture& 
             trace.id = idL;
             return true;
         }
-        return false;
     }
-
     return false;
 }
 
