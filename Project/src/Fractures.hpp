@@ -24,9 +24,10 @@ struct Fracture{
               ):
         numVertici(numVertici),
         Vertici(Vertici)
-        {} // prende in input le coordinate dei vertici e la lista dei vertici e inizializza i membri corrispondenti VerticesCoordinates e ListVertices con i valori passati come argomenti
+        {}
+    // prende in input le coordinate dei vertici e la lista dei vertici e inizializza i membri corrispondenti VerticesCoordinates e ListVertices con i valori passati come argomenti
 
-    Vector3d Baricentro(Matrix3Xd &Poligono); //metodo in quanto proprietà della frattura
+    Vector3d Baricentro(Matrix3Xd &Poligono);
     double Raggio(Vector3d &centro, Matrix3Xd &Poligono);
     Vector4d TrovaPiano(Matrix3Xd &Poligono);
 };

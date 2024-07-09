@@ -10,15 +10,15 @@ using namespace Eigen;
 namespace PolygonalLibrary {
 
 struct PolygonalMesh {
-    vector<unsigned int> IdCell0D;     // tutti gli id dei vertici
-    vector<Vector3d> CoordinatesCell0D;    // le coordinate per ciascun vertice
+    vector<unsigned int> IdCell0D;
+    vector<Vector3d> CoordinatesCell0D;
 
-    vector<unsigned int> IdCell1D;     // tutti gli id dei lati
-    vector<Vector2i> VerticesCell1D;    // gli id di start ed end per ciascun lato
+    vector<unsigned int> IdCell1D;
+    vector<Vector2i> VerticesCell1D;
 
-    vector<unsigned int> NumberElements2D;      // il num dei vertici (= num dei lati) che lo compongono
-    vector<vector<unsigned int>> VerticesCell2D;        // gli id dei vertici in senso antiorario
-    vector<vector<unsigned int>> EdgesCell2D;       // gli id dei lati in senso antiorario
+    vector<unsigned int> NumberElements2D;
+    vector<vector<unsigned int>> VerticesCell2D;
+    vector<vector<unsigned int>> EdgesCell2D;
 };
 
 inline void Add_Vert_to_Mesh(PolygonalMesh& mesh, pair<unsigned int, Vector3d> vertex){

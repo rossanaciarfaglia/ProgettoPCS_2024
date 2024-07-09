@@ -143,9 +143,10 @@ void AnalizzaTraccia(pair<unsigned int,Vector3d>& start_taglio, pair<unsigned in
             }
             else { //siamo in non passanti
                 bool flag = false; //controllo che sia passante per uno dei due
-                //se il prodotto vettoriale tra i lati del sottopoligono e il vettore dato dalla distanza tra uno dei punti tra start ed end e uno dei vertici del lato
-                //è 0 --> start o end (a seconda di quello scelto) appartiene al poligono
-                for(unsigned int i = 0; i < uscente.numVertici; i++){ //qui vedo se è passante per il sottopoligono uscente
+                /* se il prodotto vettoriale tra i lati del sottopoligono e il vettore dato dalla distanza tra uno dei punti tra start ed
+                 *  e uno dei vertici del lato è 0, allora start o end (a seconda di quello scelto) appartiene al poligono */
+                //vedo se è passante per il sottopoligono uscente
+                for(unsigned int i = 0; i < uscente.numVertici; i++){
                     if (Regola_Mano_Destra(uscente.Vertici[(i+1)%uscente.numVertici].second - uscente.Vertici[i].second, start.second - uscente.Vertici[i].second, VettoreUscente) == 2 ||
                         Regola_Mano_Destra(uscente.Vertici[(i+1)%uscente.numVertici].second - uscente.Vertici[i].second, end.second - uscente.Vertici[i].second, VettoreUscente) == 2){
                         if ((uscente.estremi[id_traccia].first.second - start.second).norm() <= 1e-14){
@@ -225,14 +226,14 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
     entrante.Vertici.reserve(5);
     pair<unsigned int, Vector3d> start;
     pair<unsigned int, Vector3d> end;
-    cout << "Nuovo poligono" << endl;
+
     if (flag == "passanti"){
         start = frattura.estremi[id_tr].first;
         end = frattura.estremi[id_tr].second;
     }
+
     else if(flag == "nonpassanti"){
-        //allunga traccia
-        // start ed end sono i punti di intersezione
+        //allunghiamo la traccia
         Matrix<double,2,3> traccia;
         traccia.row(0) << frattura.estremi[id_tr].first.second[0], frattura.estremi[id_tr].first.second[1], frattura.estremi[id_tr].first.second[2];
         traccia.row(1) = frattura.estremi[id_tr].second.second - frattura.estremi[id_tr].first.second;
@@ -281,21 +282,38 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
         }
     }
 
-    bool segno; // tiene segno dell'ultimo prodotto misto per sapere se sono passato dal sottopoligono uscente a quello entrante (o viceversa)
+    bool segn; // tiene segno dell'ultimo prodotto misto per sapere se sono passato dal sottopoligono uscente a quello entrante (o viceversa)
     bool check_trace = false;
+    bool caso_vertice = false;
     //iteriamo sui lati dei poligoni
     if (Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[0].second.first] - start.second, Direzione_Uscente) == 1){
-        segno = true;
+        segn = true;
     }
-    else if (Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[0].second.first] - start.second, Direzione_Uscente) == 0){
-        segno = false;
+    else if(Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[0].second.first] - start.second, Direzione_Uscente) == 0){
+        segn = false;
     }
     else {
-
+        caso_vertice = true;
     }
     for (unsigned int l=0; l<frattura.numVertici; l++){
         if (Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second] - start.second, Direzione_Uscente) == 1){
-            if (segno == false){
+            if (caso_vertice){
+                uscente.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
+                entrante.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
+                if (check_trace == false){
+                    uscente.Lati.push_back({id_tr, {start.first, frattura.Lati[l].second.second}});
+                    uscente.Lati.push_back(frattura.Lati[l]);
+                    entrante.Lati.push_back({id_tr, {frattura.Lati[l].second.second, start.first}});
+                    check_trace =  true;
+                }
+                else{
+                    uscente.Lati.push_back(frattura.Lati[l]);
+                }
+                mappaLati[id_tr].push_back(frattura.Lati[l].second.second);
+                caso_vertice = false;
+            }
+
+            if (segn == false){
                 uscente.Vertici.push_back(end);
                 entrante.Vertici.push_back(end);
                 if (check_trace == false){
@@ -310,15 +328,33 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
                     entrante.Lati.push_back({frattura.Lati[l].first, {frattura.Lati[l].second.first, end.first}});
                 }
             }
+
             else {
                 uscente.Lati.push_back(frattura.Lati[l]);
             }
+
             uscente.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
-            segno = true;
+            segn = true;
         }
 
         else if(Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second] - start.second, Direzione_Uscente) == 0) {
-            if (segno == true){
+            if (caso_vertice){
+                uscente.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
+                entrante.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
+                if (check_trace == false){
+                    uscente.Lati.push_back({id_tr, {frattura.Lati[l].second.second, end.first}});
+                    entrante.Lati.push_back({id_tr, {end.first, frattura.Lati[l].second.second}});
+                    entrante.Lati.push_back(frattura.Lati[l]);
+                    check_trace =  true;
+                }
+                else{
+                    entrante.Lati.push_back(frattura.Lati[l]);
+                }
+                mappaLati[id_tr].push_back(frattura.Lati[l].second.second);
+                caso_vertice = false;
+            }
+
+            if (segn == true){
                 uscente.Vertici.push_back(start);
                 entrante.Vertici.push_back(start);
                 if (check_trace == false){
@@ -333,53 +369,32 @@ void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& 
                     entrante.Lati.push_back({frattura.Lati[l].first, {start.first, frattura.Lati[l].second.second}});
                 }
             }
+
             else {
                 entrante.Lati.push_back(frattura.Lati[l]);
             }
+
             entrante.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
-            segno = false;
+            segn = false;
         }
 
         else {
             if(Regola_Mano_Destra(end.second - start.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.first] - start.second, Direzione_Uscente) == 2) {
-                cout << "allineati" << endl;
-                for (unsigned int i=0; i<frattura.numVertici; i++){
-                    cout << frattura.Lati[i].second.first << ": " << mesh.CoordinatesCell0D[frattura.Lati[i].second.first][0] << " " << mesh.CoordinatesCell0D[frattura.Lati[i].second.first][1] << " " << mesh.CoordinatesCell0D[frattura.Lati[i].second.first][2] << "         ";
-                }
-                cout << endl;
-                cout << "problematici: " << frattura.Lati[l].second.first << "   " << frattura.Lati[l].second.second << endl;
-                cout << "traccia: " << start.second[0] << " " << start.second[1] << " " << start.second[2] << "       " << end.second[0] << " " << end.second[1] << " " << end.second[2] << " " << endl;
-                // Tracce_SottoPoligoni[id_tr].remove(frattura.id);
                 return;
             }
-            cout << "vertice su traccia" << endl;
-            uscente.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
-            entrante.Vertici.push_back({frattura.Lati[l].second.second, mesh.CoordinatesCell0D[frattura.Lati[l].second.second]});
-            if(segno == true){
+
+            if(segn == true){
                 uscente.Lati.push_back(frattura.Lati[l]);
-                uscente.Lati.push_back({id_tr, {start.first, end.first}});
-                entrante.Lati.push_back({id_tr, {end.first, start.first}});
             }
             else{
                 entrante.Lati.push_back(frattura.Lati[l]);
-                entrante.Lati.push_back({id_tr, {end.first, start.first}});
-                uscente.Lati.push_back({id_tr, {start.first, end.first}});
             }
-            segno = !segno;
+
+            caso_vertice = true;
         }
     }
     uscente.numVertici = uscente.Vertici.size();
     entrante.numVertici = entrante.Vertici.size();
-    cout << "uscente: ";
-    for(unsigned int l=0; l<uscente.numVertici; l++){
-        cout << uscente.Vertici[l].first << " ";
-    }
-    cout << endl;
-    cout << "entrante: ";
-    for(unsigned int l=0; l<entrante.numVertici; l++){
-        cout << entrante.Vertici[l].first << " ";
-    }
-    cout << endl;
 
 
     for(auto k = frattura.estremi.begin(); k != frattura.estremi.end(); k++){  //itero su tutte le tracce

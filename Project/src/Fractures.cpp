@@ -69,7 +69,6 @@ Vector4d Fracture::TrovaPiano(Matrix3Xd &poligono){
     Vector4d piano;   // è il vettore normale n + la costante d
     piano << ProdottoVettoriale(u,v), 0;
     piano[3] = piano[0]*poligono(0,0) + piano[1]*poligono(1,0) + piano[2]*poligono(2,0);
-    cout << "piano: " << piano[0] << " " << piano[1] << " " << piano[2] << " " << piano[3] << " " << endl;
 
     return piano;
 }
@@ -223,30 +222,6 @@ bool Find_Trace(Trace& trace, unsigned int& idL, Fracture& poligono1, Fracture& 
 
     pair<pair<unsigned int, Vector3d>, pair<unsigned int, Vector3d>> tr = Traccia(intersezioni1, intersezioni2, retta_intersezione, idV);
     if(!(tr.first.first == 0 && tr.second.first == 0)){
-//         PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.first);
-//         PolygonalLibrary::Add_Vert_to_Mesh(mesh, tr.second);
-//         idV += 2;
-//         trace.Vertices = tr;
-//         trace.length = sqrt(DistanzaEuclidea(trace.Vertices.second.second, trace.Vertices.first.second));
-//         if(Tips(intersezioni1, trace.Vertices)){
-//             poligono1.traccePassanti.push_back(idL);
-//         }
-//         else {
-//             poligono1.tracceNonPassanti.push_back(idL);
-//         }
-
-//         if(Tips(intersezioni2, trace.Vertices)){
-//             poligono2.traccePassanti.push_back(idL);
-//         }
-//         else {
-//             poligono2.tracceNonPassanti.push_back(idL);
-//         }
-//         trace.id = idL;
-//         return true;
-//     }
-
-//     return false;
-// }
         bool pol1_sovrap = true;
         bool pol2_sovrap = true;
         for(unsigned int i=0; i<poligono1.numVertici; i++){

@@ -13,7 +13,7 @@ using namespace PolygonalLibrary;
 
 int main() {
     bool tips;
-    string filepath = "./DFN/FR3_data.txt";
+    string filepath = "./DFN/FR10_data.txt";
     Fracture fracture;
     unordered_map<unsigned int, Fracture> CollectionFractures; // Il costo computazionale è O(1), non O(logn)
 
@@ -36,7 +36,6 @@ int main() {
     for (unsigned int idF1 = 0; idF1 < n_key; idF1++){
         for(unsigned int idF2 = (idF1+1); idF2<n_key;idF2++){
             if(IntersezioneSfere(CollectionFractures[idF1], CollectionFractures[idF2])){
-                cout << "Le sfere delle fratture " << idF1 << " e " << idF2 << " si intersecano" << endl;
                 if(Find_Trace(trace, idL, CollectionFractures[idF1], CollectionFractures[idF2], idV, mesh)){
                     trace.id1 = idF1;
                     trace.id2 = idF2;
@@ -74,7 +73,6 @@ int main() {
         tips = false;
         OutputSort(CollectionFractures[numFratture].tracceNonPassanti, elenco_tracce, FileFracture, tips);
     }
-    cout << "seconda parte" << endl;
 
 
     /* per la seconda parte
@@ -89,13 +87,7 @@ int main() {
         Convertitore_struct(primo, idSP, idstart, idV, idL, elenco_tracce, CollectionFractures, idP, Sotto_poligoni, mappaLati, mesh);
 
         string flag_p = "passanti";
-        string flag_np = "nonpassanti";
-
-        cout << "ex sottopol: " << idSP << endl;
-        for (unsigned int h=0; h<primo.numVertici; h++){
-            cout << primo.Vertici[h].first << " ";
-        }
-        cout << endl;
+        string flag_np = "nonpassanti";       
 
         if (primo.Passanti.size() != 0){
             Tracce_SottoPoligoni[primo.Passanti[0]].push_back(primo.id);
@@ -122,12 +114,11 @@ int main() {
             }
         }
         else{
-            cout << "No tracce per poligono " << idSP << endl;
             idSP++;
         }
         Tracce_SottoPoligoni = {};
     }
-    cout << "!" << endl;
+
 
     map<unsigned int, vector<pair<unsigned int, pair<unsigned int, unsigned int>>>> listaFigli;
     unsigned int idF = 0;
@@ -202,64 +193,6 @@ int main() {
     }
 
 
-    cout << "IdCell0D:  ";
-    for (unsigned int i=0; i<mesh.IdCell0D.size(); i++){
-        cout << mesh.IdCell0D[i] << " ";
-    }
-    cout << endl;
-
-    cout << "IdCell1D:  ";
-    for (unsigned int i=0; i<mesh.IdCell1D.size(); i++){
-        cout << mesh.IdCell1D[i] << " ";
-    }
-    cout << endl;
-
-    cout << "NumbElemCell2d:    ";
-    for(unsigned int i=0; i<mesh.NumberElements2D.size(); i++){
-        cout << mesh.NumberElements2D[i] << " ";
-    }
-    cout << endl;
-
-    cout << "VerticesCell2d" << endl;
-    for(unsigned int i=0; i<mesh.VerticesCell2D.size(); i++){
-        for(unsigned int j=0; j<mesh.VerticesCell2D[i].size(); j++){
-            cout << mesh.VerticesCell2D[i][j] << " ";
-        }
-        cout << endl;
-    }
-    cout << endl;
-
-    cout << "EdgesCell2d" << endl;
-    for(unsigned int i=0; i<mesh.EdgesCell2D.size(); i++){
-        for(unsigned int j=0; j<mesh.EdgesCell2D[i].size(); j++){
-            cout << mesh.EdgesCell2D[i][j] << " ";
-        }
-        cout << endl;
-    }
-    cout << endl;
-
-
-    for (auto k : mappaLati){
-        cout << k.first << ": ";
-        for (auto kk : k.second){
-            cout << kk << " ";
-        }
-        cout << endl;
-    }
-
-
-
-    cout << "ListaFigli" << endl;
-    for(auto k : listaFigli){
-        cout << k.first;
-        for(auto v : k.second){
-            cout << "     " << v.first << ":  " << v.second.first << ", " << v.second.second << endl;
-        }
-        cout << endl;
-    }
-    cout << endl;
-
-
     // Close the output file stream
     FileTrace.close();
     FileFracture.close();
@@ -267,31 +200,31 @@ int main() {
 
 
     // Per esportare in Paraview
-    string exportFolder = "C:/Users/User/OneDrive/Desktop/ProgettoPCS_2024/debug/";
+    string exportFolder = "./";
     Gedim::UCDUtilities exporter;
 
-    MatrixXd points(mesh.CoordinatesCell0D.size(), 3);
-    for (unsigned int p = 0; p < mesh.CoordinatesCell0D.size(); ++p) {
-        points(p,0) = mesh.CoordinatesCell0D[p][0] ;
-        points(p,1) = mesh.CoordinatesCell0D[p][1] ;
-        points(p,2) = mesh.CoordinatesCell0D[p][2];
+    MatrixXd points(3, mesh.CoordinatesCell0D.size());
+    for (unsigned int p = 0; p < mesh.CoordinatesCell0D.size(); p++) {
+        points(0,p) = mesh.CoordinatesCell0D[p][0] ;
+        points(1,p) = mesh.CoordinatesCell0D[p][1] ;
+        points(2,p) = mesh.CoordinatesCell0D[p][2];
     };
+
     exporter.ExportPoints(exportFolder + "/Celle0Ds.inp",
                           points);
 
-    MatrixXi edge(mesh.VerticesCell1D.size(), 2);
-    for (unsigned int  i = 0; i < mesh.VerticesCell1D.size(); ++i) {
-        edge(i, 0) = mesh.VerticesCell1D[i][0];
-        edge(i, 1) = mesh.VerticesCell1D[i][1];
+    MatrixXi edge(2,mesh.VerticesCell1D.size());
+    for (unsigned int  i = 0; i < mesh.VerticesCell1D.size(); i++) {
+        edge(0,i) = mesh.VerticesCell1D[i][0];
+        edge(1,i) = mesh.VerticesCell1D[i][1];
     };
+
     exporter.ExportSegments(exportFolder + "/Geometry1Ds.inp",
                             points,
-                            edge);
-
-    vector<vector<unsigned int>> polygons = mesh.VerticesCell2D;
-    exporter.ExportPolygons(exportFolder + "/Geometry2Ds.inp",
-                            points,
-                            polygons);
+                            edge,
+                            {},
+                            {},
+                            {});
 
 
 }

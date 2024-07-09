@@ -20,7 +20,7 @@ struct SottoPoligoni{
 
     SottoPoligoni() = default;
 };
-//prendiamo l elenco delle tracce passanti
+//prendiamo l'elenco delle tracce passanti
 void DividiPoligono(unsigned int& id_tr, SottoPoligoni& frattura, unsigned int& id_sott, map<unsigned int, SottoPoligoni>& Sotto_poligoni,
                     map<unsigned int, list<unsigned int>>& Tracce_SottoPoligoni,const string& flag, unsigned int& idSP, unsigned int& idV,
                     PolygonalLibrary::PolygonalMesh& mesh, map<unsigned int, vector<unsigned int>>& mappaLati);
@@ -48,17 +48,7 @@ inline unsigned int Regola_Mano_Destra(Vector3d u, Vector3d v, Vector3d controll
 }
 
 inline bool Punto_su_Lato(Vector3d p1, Vector3d p2, Vector3d q){
-    Matrix3Xd A = p2 - p1;
-    Vector3d b = q - p1;
-    VectorXd alpha = A.colPivHouseholderQr().solve(b);
-    double alfa = alpha[0];
-
-    if ((alfa < 0) || (alfa > 1))
-        return false;
-    if (abs(q[0] - p1[0] - alfa*(p2[0] - p1[0])) > 1e-8 || abs(q[1] - p1[1] - alfa*(p2[1] - p1[1])) > 1e-8 || abs(q[2] - p1[2] - alfa*(p2[2] - p1[2])) > 1e-8)
-        return false;
-
-    return true;
+    return (abs(sqrt(DistanzaEuclidea(p1,p2)) - sqrt(DistanzaEuclidea(p1,q)) - sqrt(DistanzaEuclidea(p2,q))) < 1e-9);
 }
 
 }
